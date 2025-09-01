@@ -1,4 +1,4 @@
-import React from 'react';
+import React from 'react'
 
 const MoodEmojis = {
   1: '😔',
@@ -9,37 +9,43 @@ const MoodEmojis = {
 }
 
 const MoodColors = {
-  1: 'mood-gradient-1',
-  2: 'mood-gradient-2', 
-  3: 'mood-gradient-3',
-  4: 'mood-gradient-4',
-  5: 'mood-gradient-5'
+  1: 'from-slate-500 to-slate-600',
+  2: 'from-orange-400 to-red-500', 
+  3: 'from-blue-400 to-cyan-500',
+  4: 'from-green-400 to-emerald-500',
+  5: 'from-pink-400 to-yellow-400'
 }
 
 function EntryList({ entries }) {
   return (
-    <div className="glass-morphism rounded-2xl p-6 animate-slideIn">
-      <h3 className="text-xl font-semibold text-white mb-6">Recent Entries</h3>
-      
-      <div className="space-y-4 max-h-96 overflow-y-auto">
-        {entries.map((entry, index) => (
-          <div
-            key={entry.id}
-            className="p-4 rounded-xl bg-white/10 border border-white/20 hover:bg-white/20 transition-all duration-300"
-            style={{ animationDelay: `${index * 0.1}s` }}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <span className="text-white/80 text-sm">{entry.date}</span>
-              <span className="text-2xl">{MoodEmojis[entry.mood]}</span>
-            </div>
-            <div className={`inline-block px-3 py-1 rounded-full text-white text-xs ${MoodColors[entry.mood]}`}>
-              Mood Level {entry.mood}
-            </div>
-            {entry.note && (
-              <p className="text-white/90 mt-2">{entry.note}</p>
-            )}
+    <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 shadow-xl">
+      <h3 className="text-xl sm:text-2xl font-semibold text-white mb-8">Recent Entries</h3>
+      <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
+        {entries.length === 0 ? (
+          <div className="text-center py-8 text-white/60">
+            <div className="text-4xl mb-4">📝</div>
+            <p>No entries yet. Add your first mood!</p>
           </div>
-        ))}
+        ) : (
+          entries.map((entry, index) => (
+            <div
+              key={entry.id}
+              className="p-5 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300 group"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-white/70 text-sm font-medium">{entry.date}</span>
+                <span className="text-3xl group-hover:scale-110 transition-transform duration-300">{MoodEmojis[entry.mood]}</span>
+              </div>
+              <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-white text-sm font-medium bg-gradient-to-r ${MoodColors[entry.mood]}`}>
+                Mood Level {entry.mood}
+              </div>
+              {entry.note && (
+                <p className="text-white/90 mt-4 leading-relaxed">{entry.note}</p>
+              )}
+            </div>
+          ))
+        )}
       </div>
     </div>
   )

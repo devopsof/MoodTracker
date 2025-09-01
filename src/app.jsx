@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
-import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
-
+import LoginPage from './pages/LoginPage'
 
 function App() {
   const [user, setUser] = useState(null)
@@ -15,13 +14,13 @@ function App() {
   }
 
   return (
-    <>
+    <div className="font-sans">
       {user ? (
         <DashboardPage user={user} onLogout={handleLogout} />
       ) : (
         <LoginPage onLogin={handleLogin} />
       )}
-    </>
+    </div>
   )
 }
 
