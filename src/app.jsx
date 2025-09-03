@@ -1,33 +1,18 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
-import { loadUser, saveUser, clearUser } from './utils/localStorage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
+import { useAuth } from './context/AuthContext'
 
 function App() {
-  const [user, setUser] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
+  console.log('🎨 App component rendering...')
+  const { user, isAuthenticated, isLoading, authStatus } = useAuth()
+  
+  console.log('📊 Auth state:', { user: !!user, isAuthenticated, isLoading, authStatus })
 
-  // Load user from localStorage on app startup
-  useEffect(() => {
-    const savedUser = loadUser()
-    if (savedUser) {
-      setUser(savedUser)
-    }
-    setIsLoading(false)
-  }, [])
-
-  const handleLogin = (userData) => {
-    setUser(userData)
-    saveUser(userData)
-  }
-
-  const handleLogout = () => {
-    setUser(null)
-    clearUser()
-  }
-
-  // Show loading spinner while checking for saved user
+  // Show loading spinner while checking authentication
   if (isLoading) {
+    console.log('⏳ Showing loading screen...')
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div 
@@ -47,12 +32,17 @@ function App() {
     )
   }
 
+  // Show verification page if user needs to confirm email
+  if (authStatus === 'needsConfirmation') {
+    return <VerifyEmailPage />
+  }
+
   return (
     <div className="font-sans">
-      {user ? (
-        <DashboardPage user={user} onLogout={handleLogout} />
+      {isAuthenticated ? (
+        <DashboardPage user={user} />
       ) : (
-        <LoginPage onLogin={handleLogin} />
+        <LoginPage />
       )}
     </div>
   )

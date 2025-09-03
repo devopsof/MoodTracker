@@ -1,0 +1,19 @@
+{
+  "name": "create-entry-function",
+  "version": "1.0.0",
+  "description": "Lambda function to create mood entries",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.450.0",
+    "@aws-sdk/lib-dynamodb": "^3.450.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": ["aws", "lambda", "dynamodb", "mood-tracker"],
+  "author": "",
+  "license": "MIT"
+}

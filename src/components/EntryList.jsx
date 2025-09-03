@@ -16,12 +16,30 @@ const MoodColors = {
   5: 'from-pink-400 to-yellow-400'
 }
 
-function EntryList({ entries }) {
+// Skeleton Loading Component
+const LoadingSkeleton = () => (
+  <div className="space-y-4 animate-pulse">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="p-5 rounded-2xl bg-white/5 border border-white/10">
+        <div className="flex items-center justify-between mb-3">
+          <div className="h-4 w-20 bg-white/20 rounded"></div>
+          <div className="h-8 w-8 bg-white/20 rounded-full"></div>
+        </div>
+        <div className="h-6 w-24 bg-white/20 rounded-full mb-3"></div>
+        <div className="h-4 w-3/4 bg-white/20 rounded"></div>
+      </div>
+    ))}
+  </div>
+)
+
+function EntryList({ entries, isLoading }) {
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 shadow-xl">
       <h3 className="text-xl sm:text-2xl font-semibold text-white mb-8">Recent Entries</h3>
       <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
-        {entries.length === 0 ? (
+        {isLoading ? (
+          <LoadingSkeleton />
+        ) : entries.length === 0 ? (
           <div className="text-center py-8 text-white/60">
             <div className="text-4xl mb-4">📝</div>
             <p>No entries yet. Add your first mood!</p>

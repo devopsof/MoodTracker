@@ -1,40 +1,43 @@
 import React, { useState, useEffect } from 'react'
 import EntryForm from '../components/EntryForm'
 import EntryList from '../components/EntryList'
-import { loadEntries, addEntry } from '../utils/localStorage'
+import { loadEntries, addEntry } from '../utils/api'
+import { useAuth } from '../context/AuthContext'
 
-function DashboardPage({ user, onLogout }) {
+function DashboardPage({ user }) {
+  const { signOut } = useAuth()
   const [entries, setEntries] = useState([])
   const [showSuccess, setShowSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  // Load entries from localStorage when component mounts or user changes
+  // Load entries from API when component mounts or user changes
   useEffect(() => {
-    if (user && user.email) {
-      const savedEntries = loadEntries(user.email)
+    const loadUserEntries = async () => {
+      // Clear entries immediately when user changes
+      setEntries([])
+      setIsLoading(true)
       
-      // If no saved entries exist, add some sample data for first-time users
-      if (savedEntries.length === 0) {
-        const sampleEntries = [
-          { id: Date.now() - 1000, date: 'Aug 30, 2024', mood: 4, note: 'Had a wonderful productive day working on projects!' },
-          { id: Date.now() - 2000, date: 'Aug 29, 2024', mood: 2, note: 'Feeling stressed about upcoming deadlines and work pressure' }
-        ]
-        // Save sample entries to localStorage first
-        sampleEntries.forEach(entry => {
-          addEntry(user.email, entry)
-        })
-        // Load the updated entries from localStorage to keep everything in sync
-        setEntries(loadEntries(user.email))
-      } else {
-        setEntries(savedEntries)
+      if (user && user.email) {
+        console.log('🔄 Loading entries for user:', user.email)
+        try {
+          const savedEntries = await loadEntries(user.email)
+          console.log('📊 Loaded entries:', savedEntries)
+          setEntries(savedEntries)
+        } catch (error) {
+          console.error('❌ Failed to load entries:', error)
+          // Set empty array on error so UI doesn't break
+          setEntries([])
+        }
       }
+      setIsLoading(false)
     }
-    setIsLoading(false)
-  }, [user])
+    
+    loadUserEntries()
+  }, [user?.email])
 
-  const handleAddEntry = (newEntry) => {
+  const handleAddEntry = async (newEntry) => {
     const entry = {
-      id: Date.now(),
+      id: Date.now(), // Temporary ID for UI, API will provide real ID
       date: new Date().toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric', 
@@ -47,13 +50,24 @@ function DashboardPage({ user, onLogout }) {
     const updatedEntries = [entry, ...entries]
     setEntries(updatedEntries)
     
-    // Save to localStorage
-    if (user && user.email) {
-      addEntry(user.email, entry)
+    try {
+      // Save to API
+      if (user && user.email) {
+        await addEntry(user.email, entry)
+        // Reload entries from API to get the real data
+        const apiEntries = await loadEntries(user.email)
+        setEntries(apiEntries)
+      }
+      
+      setShowSuccess(true)
+      setTimeout(() => setShowSuccess(false), 3000)
+    } catch (error) {
+      console.error('Failed to save entry to API:', error)
+      // Revert optimistic update on error
+      setEntries(entries)
+      // TODO: Show error message to user
+      alert('Failed to save entry. Please try again.')
     }
-    
-    setShowSuccess(true)
-    setTimeout(() => setShowSuccess(false), 3000)
   }
 
   return (
@@ -125,7 +139,7 @@ function DashboardPage({ user, onLogout }) {
               <h1 className="text-2xl sm:text-3xl font-bold text-white">MoodFlow</h1>
             </div>
             <button 
-              onClick={onLogout} 
+              onClick={() => signOut()} 
               className="px-4 py-2 rounded-2xl bg-white/20 text-white hover:bg-white/30 transition-all duration-300 font-medium"
             >
               Logout
@@ -150,7 +164,7 @@ function DashboardPage({ user, onLogout }) {
         )}
         <div className="grid lg:grid-cols-2 gap-8">
           <EntryForm onAddEntry={handleAddEntry} />
-          <EntryList entries={entries} />
+          <EntryList entries={entries} isLoading={isLoading} />
         </div>
       </div>
     </div>
