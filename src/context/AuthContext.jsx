@@ -17,6 +17,7 @@ const initialState = {
   error: null,
   authStatus: 'checking',
   pendingVerificationEmail: null,
+  pendingVerificationPassword: null, // Store password for auto-login after verification
 }
 
 // Action types
@@ -28,6 +29,8 @@ const actions = {
   CLEAR_USER: 'CLEAR_USER',
   SET_AUTH_STATUS: 'SET_AUTH_STATUS',
   SET_PENDING_EMAIL: 'SET_PENDING_EMAIL',
+  SET_PENDING_PASSWORD: 'SET_PENDING_PASSWORD',
+  CLEAR_PENDING_CREDENTIALS: 'CLEAR_PENDING_CREDENTIALS',
 }
 
 // Reducer
@@ -66,6 +69,14 @@ const authReducer = (state, action) => {
       }
     case actions.SET_PENDING_EMAIL:
       return { ...state, pendingVerificationEmail: action.payload }
+    case actions.SET_PENDING_PASSWORD:
+      return { ...state, pendingVerificationPassword: action.payload }
+    case actions.CLEAR_PENDING_CREDENTIALS:
+      return { 
+        ...state, 
+        pendingVerificationEmail: null, 
+        pendingVerificationPassword: null 
+      }
     default:
       return state
   }
@@ -120,7 +131,9 @@ export function AuthProvider({ children }) {
     try {
       const result = await cognitoSignUp({ email, password })
       
+      // Store credentials for auto-login after verification
       dispatch({ type: actions.SET_PENDING_EMAIL, payload: email })
+      dispatch({ type: actions.SET_PENDING_PASSWORD, payload: password })
       dispatch({ type: actions.SET_AUTH_STATUS, payload: 'needsConfirmation' })
       
       return {
@@ -145,11 +158,41 @@ export function AuthProvider({ children }) {
     
     try {
       await cognitoConfirmSignUp({ email, code })
-      dispatch({ type: actions.SET_AUTH_STATUS, payload: 'signedOut' })
       
-      return {
-        success: true,
-        message: 'Email verified! Please sign in.',
+      // Auto-login after successful verification using stored password
+      const storedPassword = state.pendingVerificationPassword
+      
+      if (storedPassword) {
+        console.log('✨ Email verified! Auto-signing in...')
+        
+        // Automatically sign the user in
+        const signInResult = await cognitoSignIn({ email, password: storedPassword })
+        
+        // Clear stored credentials for security
+        dispatch({ type: actions.CLEAR_PENDING_CREDENTIALS })
+        
+        // Set user as authenticated
+        dispatch({
+          type: actions.SET_USER,
+          payload: {
+            user: signInResult.user,
+            tokens: signInResult.tokens,
+          },
+        })
+        
+        return {
+          success: true,
+          message: 'Email verified and signed in successfully!',
+          autoSignedIn: true
+        }
+      } else {
+        // Fallback if password not stored (shouldn't happen)
+        dispatch({ type: actions.SET_AUTH_STATUS, payload: 'signedOut' })
+        return {
+          success: true,
+          message: 'Email verified! Please sign in.',
+          autoSignedIn: false
+        }
       }
     } catch (error) {
       dispatch({
@@ -200,6 +243,8 @@ export function AuthProvider({ children }) {
       console.error('Sign out error:', error)
     } finally {
       dispatch({ type: actions.CLEAR_USER })
+      // Clear any pending credentials for security
+      dispatch({ type: actions.CLEAR_PENDING_CREDENTIALS })
     }
   }
 

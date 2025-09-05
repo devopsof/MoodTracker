@@ -1,10 +1,36 @@
-// Mood Emojis mapping
+// Mood Emojis mapping (1-5 scale)
 export const MoodEmojis = {
     1: '😔',
     2: '😕',
     3: '😐',
     4: '😊',
     5: '😄'
+}
+
+// Quick emoji selection for one-tap mood entry
+export const QuickMoodEmojis = [
+    { emoji: '😭', mood: 1, intensity: 8, label: 'Very Sad' },
+    { emoji: '😔', mood: 1, intensity: 5, label: 'Sad' },
+    { emoji: '😕', mood: 2, intensity: 5, label: 'Down' },
+    { emoji: '😐', mood: 3, intensity: 4, label: 'Neutral' },
+    { emoji: '🙂', mood: 4, intensity: 4, label: 'Okay' },
+    { emoji: '😊', mood: 4, intensity: 6, label: 'Good' },
+    { emoji: '😄', mood: 5, intensity: 7, label: 'Happy' },
+    { emoji: '🤩', mood: 5, intensity: 9, label: 'Amazing' },
+]
+
+// Intensity labels for the 1-10 scale
+export const IntensityLabels = {
+    1: 'Very Weak',
+    2: 'Weak', 
+    3: 'Light',
+    4: 'Mild',
+    5: 'Moderate',
+    6: 'Strong',
+    7: 'Very Strong',
+    8: 'Intense',
+    9: 'Extreme',
+    10: 'Overwhelming'
 }
 
 export const MoodColors = {
@@ -26,5 +52,6 @@ export const TAG_CATEGORIES = {
     'food': { emoji: '🍽️', color: 'bg-yellow-500/80' },
     'weather': { emoji: '🌤️', color: 'bg-cyan-500/80' },
     'stress': { emoji: '😰', color: 'bg-red-600/80' },
-    'joy': { emoji: '😊', color: 'bg-pink-500/80' }
+    'joy': { emoji: '😊', color: 'bg-pink-500/80' },
+    'quick-checkin': { emoji: '⚡', color: 'bg-violet-500/80' }
 }

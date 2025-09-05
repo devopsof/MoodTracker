@@ -1,25 +1,35 @@
 import React, { useState } from 'react'
-import { MoodEmojis, TAG_CATEGORIES } from '../utils/constants'
+import { MoodEmojis, QuickMoodEmojis, IntensityLabels, TAG_CATEGORIES } from '../utils/constants'
+import PromptSelector from './PromptSelector'
 
 function EntryForm({ onAddEntry }) {
   const [mood, setMood] = useState(3)
+  const [intensity, setIntensity] = useState(5)
   const [note, setNote] = useState('')
   const [selectedTags, setSelectedTags] = useState([])
   const [customTag, setCustomTag] = useState('')
+  const [quickMoodMode, setQuickMoodMode] = useState(false)
+  const [showPromptSelector, setShowPromptSelector] = useState(false)
+  const [selectedPrompt, setSelectedPrompt] = useState(null)
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (onAddEntry) {
       onAddEntry({ 
         mood, 
+        intensity,
         note, 
-        tags: selectedTags 
+        tags: selectedTags,
+        promptId: selectedPrompt?.id || null
       })
     }
     setNote('')
     setMood(3)
+    setIntensity(5)
     setSelectedTags([])
     setCustomTag('')
+    setQuickMoodMode(false)
+    setSelectedPrompt(null)
   }
 
   const handleTagToggle = (tagName) => {
@@ -41,9 +51,128 @@ function EntryForm({ onAddEntry }) {
     setSelectedTags(prev => prev.filter(tag => tag !== tagName))
   }
 
+  const handleQuickMoodSelect = (quickMood) => {
+    setMood(quickMood.mood)
+    setIntensity(quickMood.intensity)
+    setQuickMoodMode(false)
+    // Auto-submit for quick check-in
+    if (onAddEntry) {
+      onAddEntry({
+        mood: quickMood.mood,
+        intensity: quickMood.intensity,
+        note: `Quick check-in: ${quickMood.label}`,
+        tags: ['quick-checkin'],
+        promptId: null // Quick check-ins don't use prompts
+      })
+    }
+    // Reset form
+    setNote('')
+    setMood(3)
+    setIntensity(5)
+    setSelectedTags([])
+    setCustomTag('')
+    setQuickMoodMode(false)
+  }
+
+  const handlePromptSelect = (prompt) => {
+    setSelectedPrompt(prompt)
+    if (prompt) {
+      // Pre-fill note with prompt placeholder if note is empty
+      if (!note.trim()) {
+        setNote(prompt.placeholder)
+      }
+    }
+  }
+
   return (
+    <>
     <form onSubmit={handleSubmit} className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 shadow-xl">
-      <h3 className="text-xl sm:text-2xl font-semibold text-white mb-8">Add Today's Mood</h3>
+      <div className="flex justify-between items-center mb-8">
+        <h3 className="text-xl sm:text-2xl font-semibold text-white">Add Today's Mood</h3>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={() => setShowPromptSelector(true)}
+            className="px-4 py-2 rounded-xl bg-white/20 text-white hover:bg-white/30 transition-all duration-300 text-sm font-medium"
+          >
+            💭 Writing Prompts
+          </button>
+          <button
+            type="button"
+            onClick={() => setQuickMoodMode(!quickMoodMode)}
+            className="px-4 py-2 rounded-xl bg-white/20 text-white hover:bg-white/30 transition-all duration-300 text-sm font-medium"
+          >
+            ⚡ Quick Check-in
+          </button>
+        </div>
+      </div>
+      
+      {quickMoodMode && (
+        <div className="mb-8 p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-2xl border border-blue-400/20">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="text-white font-medium flex items-center gap-2">
+              ⚡ Quick Check-in Mode
+            </h4>
+            <button
+              type="button"
+              onClick={() => setQuickMoodMode(false)}
+              className="text-white/60 hover:text-white text-sm"
+            >
+              Switch to Full Entry
+            </button>
+          </div>
+          <p className="text-white/70 text-sm mb-4">Tap any emoji below to instantly log your mood:</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {QuickMoodEmojis.map((quickMood, index) => (
+              <button
+                key={index}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleQuickMoodSelect(quickMood)
+                }}
+                className="p-4 rounded-2xl bg-white/10 hover:bg-white/20 transition-all duration-300 text-center group hover:scale-105"
+              >
+                <div className="text-3xl mb-2 group-hover:scale-110 transition-transform">{quickMood.emoji}</div>
+                <div className="text-white/90 text-sm font-medium">{quickMood.label}</div>
+                <div className="text-white/60 text-xs mt-1">{quickMood.mood}/5 • {quickMood.intensity}/10</div>
+              </button>
+            ))}
+          </div>
+          <div className="mt-4 p-3 bg-white/5 rounded-xl border border-white/10">
+            <p className="text-white/60 text-xs text-center">
+              📝 These will be saved immediately with "quick-checkin" tag
+            </p>
+          </div>
+        </div>
+      )}
+      
+      {/* Selected Prompt Display */}
+      {selectedPrompt && (
+        <div className="mb-8 p-6 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-2xl border border-white/10">
+          <div className="flex justify-between items-start mb-3">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{selectedPrompt.emoji}</span>
+              <div>
+                <h4 className="text-white font-medium">{selectedPrompt.title}</h4>
+                <p className="text-white/70 text-sm">{selectedPrompt.subtitle}</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSelectedPrompt(null)}
+              className="text-white/60 hover:text-white text-lg w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
+            >
+              ×
+            </button>
+          </div>
+          <div className="text-white/60 text-sm bg-white/5 rounded-lg px-3 py-2 border border-white/5">
+            Reflection starter: "{selectedPrompt.placeholder}"
+          </div>
+        </div>
+      )}
+      
       <div className="space-y-8">
         <div>
           <label className="block text-white/90 text-base font-medium mb-6">
@@ -80,6 +209,52 @@ function EntryForm({ onAddEntry }) {
             </div>
           </div>
         </div>
+        
+        {/* Intensity Slider */}
+        <div>
+          <label className="block text-white/90 text-base font-medium mb-4">
+            How intense is this feeling? <span className="text-lg">{intensity}/10</span>
+            <span className="text-white/70 text-sm ml-2">({IntensityLabels[intensity]})</span>
+          </label>
+          <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-white/60 text-sm">1</span>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                value={intensity}
+                onChange={(e) => setIntensity(parseInt(e.target.value))}
+                className="flex-1 mx-6 h-3 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+                style={{
+                  background: `linear-gradient(to right, #f59e0b 0%, #f59e0b ${(intensity-1)*11.11}%, rgba(255,255,255,0.2) ${(intensity-1)*11.11}%, rgba(255,255,255,0.2) 100%)`
+                }}
+              />
+              <span className="text-white/60 text-sm">10</span>
+            </div>
+            <div className="flex justify-between max-w-lg mx-auto mt-4">
+              {[1, 3, 5, 7, 10].map(num => (
+                <div key={num} className="flex flex-col items-center">
+                  <span 
+                    className={`text-xs font-bold transition-all duration-300 ${
+                      intensity === num ? 'text-amber-300 scale-110' : 'text-white/40'
+                    }`}
+                  >
+                    {num}
+                  </span>
+                  <span 
+                    className={`text-xs transition-all duration-300 ${
+                      intensity === num ? 'text-amber-200' : 'text-white/30'
+                    }`}
+                  >
+                    {IntensityLabels[num]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        
         <div>
           <label className="block text-white/90 text-base font-medium mb-4">
             Add a note (optional)
@@ -93,7 +268,8 @@ function EntryForm({ onAddEntry }) {
           />
         </div>
         
-        {/* Tags Section */}
+        {/* Tags Section - Only show when not in quick mood mode */}
+        {!quickMoodMode && (
         <div>
           <label className="block text-white/90 text-base font-medium mb-4">
             Add tags (optional) 🏷️
@@ -173,6 +349,7 @@ function EntryForm({ onAddEntry }) {
             </div>
           )}
         </div>
+        )}
         
         <button
           type="submit"
@@ -182,6 +359,15 @@ function EntryForm({ onAddEntry }) {
         </button>
       </div>
     </form>
+    
+    {/* Prompt Selector Modal - Outside form to prevent positioning issues */}
+    <PromptSelector
+      isOpen={showPromptSelector}
+      onClose={() => setShowPromptSelector(false)}
+      onSelectPrompt={handlePromptSelect}
+      currentMood={mood}
+    />
+    </>
   )
 }
 

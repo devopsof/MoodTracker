@@ -1,10 +1,14 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
 function VerifyEmailPage() {
+  const navigate = useNavigate()
   const [code, setCode] = useState('')
   const [isResending, setIsResending] = useState(false)
   const [resendMessage, setResendMessage] = useState('')
+  const [verificationSuccess, setVerificationSuccess] = useState(false)
+  const [successMessage, setSuccessMessage] = useState('')
 
   const { 
     confirmSignUp, 
@@ -12,11 +16,20 @@ function VerifyEmailPage() {
     isLoading, 
     error, 
     clearError,
-    pendingVerificationEmail 
+    pendingVerificationEmail,
+    isAuthenticated 
   } = useAuth()
 
   // Use the stored email from sign-up flow
   const email = pendingVerificationEmail
+  
+  const handleLogoClick = () => {
+    if (isAuthenticated) {
+      navigate('/dashboard')
+    } else {
+      navigate('/') // Go back to landing page
+    }
+  }
 
   const handleVerification = async (e) => {
     e.preventDefault()
@@ -27,10 +40,24 @@ function VerifyEmailPage() {
     }
 
     try {
-      await confirmSignUp({ email, code })
-      // The AuthContext will handle the state change to redirect to login
+      const result = await confirmSignUp({ email, code })
+      
+      setVerificationSuccess(true)
+      setSuccessMessage(result.message)
+      
+      if (result.autoSignedIn) {
+        console.log('✅ Auto-signed in after verification!')
+        // Show success message briefly before redirect
+        setTimeout(() => {
+          // User will be automatically redirected to dashboard by AuthContext
+        }, 1500)
+      } else {
+        console.log('ℹ️ Verification complete, please sign in')
+        // Fallback: user will be redirected to login page
+      }
     } catch (error) {
       console.error('Verification error:', error)
+      setVerificationSuccess(false)
     }
   }
 
@@ -102,8 +129,20 @@ function VerifyEmailPage() {
 
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 sm:p-10 w-full max-w-md border border-white/20 shadow-2xl relative z-10">
         <div className="text-center mb-10">
-          <div className="text-5xl mb-4">📧</div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3">Verify Email</h1>
+          <div 
+            className="text-5xl mb-4 cursor-pointer hover:scale-110 transition-transform duration-300"
+            onClick={handleLogoClick}
+            title={isAuthenticated ? 'Go to Dashboard' : 'Go to Home'}
+          >
+            📧
+          </div>
+          <h1 
+            className="text-4xl sm:text-5xl font-bold text-white mb-3 cursor-pointer hover:opacity-80 transition-opacity duration-300"
+            onClick={handleLogoClick}
+            title={isAuthenticated ? 'Go to Dashboard' : 'Go to Home'}
+          >
+            Verify Email
+          </h1>
           <p className="text-white/80 text-lg">Enter the verification code sent to your email</p>
         </div>
 
@@ -143,6 +182,15 @@ function VerifyEmailPage() {
               <div className="flex items-center space-x-2">
                 <span className="text-2xl">✅</span>
                 <span className="font-medium">{resendMessage}</span>
+              </div>
+            </div>
+          )}
+
+          {verificationSuccess && successMessage && (
+            <div className="p-4 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-white">
+              <div className="flex items-center space-x-2">
+                <span className="text-2xl">✨</span>
+                <span className="font-medium">{successMessage}</span>
               </div>
             </div>
           )}

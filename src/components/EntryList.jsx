@@ -1,5 +1,6 @@
 import React from 'react'
-import { MoodEmojis, MoodColors, TAG_CATEGORIES } from '../utils/constants'
+import { MoodEmojis, MoodColors, IntensityLabels, TAG_CATEGORIES } from '../utils/constants'
+import { getPromptById } from '../utils/prompts'
 
 // Skeleton Loading Component
 const LoadingSkeleton = () => (
@@ -40,8 +41,17 @@ function EntryList({ entries, isLoading }) {
                 <span className="text-white/70 text-sm font-medium">{entry.date}</span>
                 <span className="text-3xl group-hover:scale-110 transition-transform duration-300">{MoodEmojis[entry.mood]}</span>
               </div>
-              <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-white text-sm font-medium bg-gradient-to-r ${MoodColors[entry.mood]}`}>
-                Mood Level {entry.mood}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-white text-sm font-medium bg-gradient-to-r ${MoodColors[entry.mood]}`}>
+                  Mood Level {entry.mood}
+                </div>
+                {(entry.intensity !== null && entry.intensity !== undefined) && (
+                  <div className="inline-flex items-center px-3 py-1.5 rounded-full text-white text-sm font-medium bg-gradient-to-r from-amber-500 to-orange-500">
+                    <span className="mr-1">⚡</span>
+                    Intensity {entry.intensity}/10
+                    <span className="ml-1 text-xs opacity-80">({IntensityLabels[entry.intensity]})</span>
+                  </div>
+                )}
               </div>
               
               {/* Tags Display */}
@@ -63,6 +73,28 @@ function EntryList({ entries, isLoading }) {
                   })}
                 </div>
               )}
+              
+              {/* Prompt Display */}
+              {entry.promptId && (() => {
+                const prompt = getPromptById(entry.promptId)
+                return prompt ? (
+                  <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">{prompt.emoji}</span>
+                      <span className="text-white/80 text-sm font-medium">Prompt:</span>
+                      <span className="text-white/90 text-sm">{prompt.title}</span>
+                    </div>
+                    <p className="text-white/60 text-xs ml-7">{prompt.subtitle}</p>
+                  </div>
+                ) : (
+                  <div className="mt-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">📝</span>
+                      <span className="text-white/80 text-sm">Used a writing prompt</span>
+                    </div>
+                  </div>
+                )
+              })()}
               
               {entry.note && (
                 <p className="text-white/90 mt-4 leading-relaxed">{entry.note}</p>

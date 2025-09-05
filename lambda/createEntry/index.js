@@ -30,6 +30,13 @@ const validateMoodEntry = (data) => {
     errors.push('Mood must be a number between 1 and 5');
   }
   
+  // Validate intensity (optional, 1-10 scale)
+  if (data.intensity !== undefined) {
+    if (typeof data.intensity !== 'number' || data.intensity < 1 || data.intensity > 10) {
+      errors.push('Intensity must be a number between 1 and 10');
+    }
+  }
+  
   // Note is optional, but if provided should be a string
   if (data.note && typeof data.note !== 'string') {
     errors.push('Note must be a string');
@@ -38,6 +45,36 @@ const validateMoodEntry = (data) => {
   // Check note length (optional limit)
   if (data.note && data.note.length > 1000) {
     errors.push('Note must be less than 1000 characters');
+  }
+  
+  // Validate tags if provided
+  if (data.tags !== undefined) {
+    if (!Array.isArray(data.tags)) {
+      errors.push('Tags must be an array');
+    } else {
+      // Check each tag is a string and reasonable length
+      data.tags.forEach((tag, index) => {
+        if (typeof tag !== 'string') {
+          errors.push(`Tag at index ${index} must be a string`);
+        } else if (tag.length > 50) {
+          errors.push(`Tag at index ${index} must be less than 50 characters`);
+        }
+      });
+      
+      // Limit number of tags
+      if (data.tags.length > 10) {
+        errors.push('Maximum 10 tags allowed per entry');
+      }
+    }
+  }
+  
+  // Validate promptId if provided
+  if (data.promptId !== undefined) {
+    if (typeof data.promptId !== 'string') {
+      errors.push('PromptId must be a string');
+    } else if (data.promptId.length > 100) {
+      errors.push('PromptId must be less than 100 characters');
+    }
   }
   
   return {
@@ -99,7 +136,10 @@ exports.handler = async (event, context) => {
       userId: userId,
       entryId: entryId,
       mood: requestBody.mood,
+      intensity: requestBody.intensity || null,
       note: requestBody.note || '',
+      tags: requestBody.tags || [],
+      promptId: requestBody.promptId || null,
       createdAt: now.toISOString(),
       date: now.toLocaleDateString('en-US', { 
         month: 'short', 
@@ -130,7 +170,10 @@ exports.handler = async (event, context) => {
           id: entryId,
           userId: userId,
           mood: moodEntry.mood,
+          intensity: moodEntry.intensity,
           note: moodEntry.note,
+          tags: moodEntry.tags,
+          promptId: moodEntry.promptId,
           date: moodEntry.date,
           createdAt: moodEntry.createdAt
         }

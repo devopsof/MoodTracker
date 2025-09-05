@@ -14,7 +14,10 @@ export const createEntry = async (entry, userEmail) => {
   try {
     const requestBody = {
       mood: entry.mood,
+      intensity: entry.intensity || null,
       note: entry.note || '',
+      tags: entry.tags || [],
+      promptId: entry.promptId || null,
       date: entry.date || new Date().toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric', 
@@ -49,7 +52,10 @@ export const createEntry = async (entry, userEmail) => {
     return {
       id: data.entry.id,
       mood: data.entry.mood,
+      intensity: data.entry.intensity,
       note: data.entry.note,
+      tags: data.entry.tags || [],
+      promptId: data.entry.promptId,
       date: data.entry.date,
       createdAt: data.entry.createdAt
     }

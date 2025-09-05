@@ -1,0 +1,63 @@
+/* Ensure modal is properly positioned and appears above all content */
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: rgba(0, 0, 0, 0.75) !important;
+  backdrop-filter: blur(8px) !important;
+  padding: 1rem !important;
+  margin: 0 !important;
+  transform: none !important;
+}
+
+.modal-content {
+  position: relative !important;
+  max-width: 48rem !important;
+  width: 100% !important;
+  max-height: 85vh !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(20px) !important;
+  border-radius: 1rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  transform: none !important;
+  overflow: hidden !important;
+}
+
+/* Override any parent positioning that might interfere */
+.modal-overlay * {
+  box-sizing: border-box;
+}
+
+/* Ensure the modal content is properly contained */
+.modal-content-inner {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 85vh;
+}
+
+/* Additional override to ensure modal appears properly */
+body .modal-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 999999 !important;
+}
+
+/* Prevent any parent containers from interfering */
+#root .modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  z-index: 999999 !important;
+}

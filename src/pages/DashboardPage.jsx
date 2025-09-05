@@ -135,7 +135,14 @@ function DashboardPage({ user }) {
       <nav className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
+            <div 
+              className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity duration-300"
+              onClick={() => {
+                setActiveTab('entries')
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
+              title="Go to Mood Entries"
+            >
               <span className="text-2xl">🌈</span>
               <h1 className="text-2xl sm:text-3xl font-bold text-white">MoodFlow</h1>
             </div>

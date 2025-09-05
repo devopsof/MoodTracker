@@ -1,7 +1,20 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import LoginForm from '../components/LoginForm'
 
 function LoginPage({ onLogin }) {
+  const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
+  
+  const handleLogoClick = () => {
+    if (isAuthenticated) {
+      navigate('/dashboard')
+    } else {
+      navigate('/') // Go back to landing page
+    }
+  }
+  
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden" style={{minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', position: 'relative', overflow: 'hidden'}}>
       {/* Animated moving background */}
@@ -78,9 +91,31 @@ function LoginPage({ onLogin }) {
 
       <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 sm:p-10 w-full max-w-md border border-white/20 shadow-2xl relative z-10" style={{background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(16px)', borderRadius: '1.5rem', padding: '2rem', width: '100%', maxWidth: '28rem', border: '1px solid rgba(255, 255, 255, 0.2)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', position: 'relative', zIndex: 10}}>
         <div className="text-center mb-10" style={{textAlign: 'center', marginBottom: '2.5rem'}}>
-          <div className="text-5xl mb-4" style={{fontSize: '3rem', marginBottom: '1rem'}}>🌈</div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-3" style={{fontSize: '2.25rem', fontWeight: 'bold', color: 'white', marginBottom: '0.75rem'}}>MoodFlow</h1>
+          <div 
+            className="text-5xl mb-4 cursor-pointer hover:scale-110 transition-transform duration-300" 
+            style={{fontSize: '3rem', marginBottom: '1rem'}}
+            onClick={handleLogoClick}
+            title={isAuthenticated ? 'Go to Dashboard' : 'Go to Home'}
+          >
+            🌈
+          </div>
+          <h1 
+            className="text-4xl sm:text-5xl font-bold text-white mb-3 cursor-pointer hover:opacity-80 transition-opacity duration-300" 
+            style={{fontSize: '2.25rem', fontWeight: 'bold', color: 'white', marginBottom: '0.75rem'}}
+            onClick={handleLogoClick}
+            title={isAuthenticated ? 'Go to Dashboard' : 'Go to Home'}
+          >
+            MoodFlow
+          </h1>
           <p className="text-white/80 text-lg" style={{color: 'rgba(255, 255, 255, 0.8)', fontSize: '1.125rem'}}>Track your emotional journey</p>
+          <div className="mt-4">
+            <button 
+              onClick={() => navigate('/')} 
+              className="text-white/60 hover:text-white text-sm transition-colors duration-300 bg-transparent border-none cursor-pointer"
+            >
+              ← Back to Home
+            </button>
+          </div>
         </div>
 
         <LoginForm onLogin={onLogin} />

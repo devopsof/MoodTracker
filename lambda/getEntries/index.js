@@ -104,7 +104,10 @@ const formatEntries = (items) => {
   return items.map(item => ({
     id: item.entryId,
     mood: item.mood,
+    intensity: item.intensity || null,
     note: item.note || '',
+    tags: item.tags || [],
+    promptId: item.promptId || null,
     date: item.date,
     createdAt: item.createdAt,
     timestamp: item.timestamp
