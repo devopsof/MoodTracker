@@ -86,14 +86,14 @@ function EntryForm({ onAddEntry }) {
 
   return (
     <>
-    <form onSubmit={handleSubmit} className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 shadow-xl">
+    <form onSubmit={handleSubmit} className="bg-theme-glass rounded-3xl p-6 sm:p-8 border border-theme-glass shadow-xl">
       <div className="flex justify-between items-center mb-8">
-        <h3 className="text-xl sm:text-2xl font-semibold text-white">Add Today's Mood</h3>
+        <h3 className="text-xl sm:text-2xl font-semibold text-theme-primary">Add Today's Mood</h3>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => setShowPromptSelector(true)}
-            className="px-4 py-2 rounded-xl bg-white/20 text-white hover:bg-white/30 transition-all duration-300 text-sm font-medium"
+            className="px-4 py-2 rounded-xl bg-theme-glass text-theme-primary hover:bg-theme-glass border border-theme-glass hover:border-theme-glass transition-all duration-300 text-sm font-medium"
           >
             💭 Writing Prompts
           </button>

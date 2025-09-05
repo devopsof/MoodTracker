@@ -89,23 +89,6 @@ function VerifyEmailPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated moving background */}
-      <div 
-        className="absolute inset-0" 
-        style={{
-          background: 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab, #667eea, #764ba2)',
-          backgroundSize: '400% 400%',
-          animation: 'gradientMove 15s ease infinite'
-        }}
-      ></div>
-      <div 
-        className="absolute inset-0" 
-        style={{
-          background: 'linear-gradient(45deg, rgba(255,255,255,0.1), rgba(0,0,0,0.1), transparent, rgba(255,255,255,0.05))',
-          backgroundSize: '200% 200%',
-          animation: 'shimmer 8s ease-in-out infinite reverse'
-        }}
-      ></div>
 
       {/* Floating animated orbs */}
       <div 

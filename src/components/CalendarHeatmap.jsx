@@ -214,8 +214,8 @@ function CalendarHeatmap({ userEmail }) {
   }
 
   return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-xl">
-      <div className="flex gap-6 h-[580px]">
+    <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-xl overflow-hidden max-w-full">
+      <div className="flex gap-6 h-[580px] min-w-0 w-full">
         {/* Left Side - Calendar */}
         <div className="flex-shrink-0 w-[420px] calendar-container">
           {/* Calendar Header */}
@@ -321,9 +321,9 @@ function CalendarHeatmap({ userEmail }) {
         </div>
 
         {/* Right Side - Chat Box (Full Width) */}
-        <div className="flex-1">
+        <div className="flex-1 min-w-0 overflow-hidden">
           {selectedDay && selectedDay.moodData ? (
-            <div className="h-full bg-white rounded-2xl shadow-xl border border-gray-200 chat-container flex flex-col">
+            <div className="h-full bg-white rounded-2xl shadow-xl border border-gray-200 chat-container flex flex-col overflow-hidden">
               {/* Header - like messenger chat header */}
               <div className="bg-gray-50 px-6 py-4 rounded-t-2xl border-b border-gray-200 flex-shrink-0">
                 <div className="flex items-center justify-between">
@@ -432,7 +432,7 @@ function CalendarHeatmap({ userEmail }) {
               </div>
 
               {/* Messages Container - scrollable like messenger */}
-              <div className="flex-1 p-4 space-y-3 overflow-y-auto">
+              <div className="flex-1 p-4 space-y-3 overflow-y-auto overflow-x-hidden">
                 {(() => {
                   const filteredEntries = getFilteredEntries(selectedDay.moodData.entries)
                   

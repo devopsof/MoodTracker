@@ -137,42 +137,29 @@ function LandingPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      {/* Animated background */}
-      <div 
-        className="fixed inset-0 -z-10" 
-        style={{
-          background: 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab, #667eea, #764ba2)',
-          backgroundSize: '400% 400%',
-          animation: 'gradientMove 15s ease infinite'
-        }}
-      />
-      
-      {/* Overlay pattern */}
-      <div 
-        className="fixed inset-0 -z-10" 
-        style={{
-          background: 'linear-gradient(45deg, rgba(255,255,255,0.1), rgba(0,0,0,0.1), transparent, rgba(255,255,255,0.05))',
-          backgroundSize: '200% 200%',
-          animation: 'shimmer 8s ease-in-out infinite reverse'
-        }}
-      />
       
       {/* Floating orbs */}
       <div 
-        className="fixed top-20 right-20 w-32 h-32 bg-cyan-400/20 rounded-full blur-2xl" 
+        className="fixed top-20 right-20 w-32 h-32 theme-orb-1 rounded-full blur-2xl" 
         style={{
           animation: 'floatOrb1 22s ease-in-out infinite'
         }}
       />
       <div 
-        className="fixed bottom-20 left-20 w-40 h-40 bg-purple-400/20 rounded-full blur-2xl" 
+        className="fixed bottom-20 left-20 w-40 h-40 theme-orb-2 rounded-full blur-2xl" 
         style={{
           animation: 'floatOrb2 28s ease-in-out infinite reverse'
         }}
       />
+      <div 
+        className="fixed top-1/2 left-1/3 w-24 h-24 theme-orb-3 rounded-full blur-3xl" 
+        style={{
+          animation: 'floatOrb3 25s ease-in-out infinite'
+        }}
+      />
 
       {/* Header */}
-      <header className="relative z-10 bg-white/10 backdrop-blur-lg border-b border-white/20">
+      <header className="relative z-10 bg-theme-glass border-b border-theme-glass">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
             <div 
@@ -180,7 +167,7 @@ function LandingPage() {
               onClick={() => isAuthenticated ? navigate('/dashboard') : null}
             >
               <span className="text-3xl">🌈</span>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">MoodFlow</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-theme-primary">MoodFlow</h1>
             </div>
             <button 
               onClick={handleGetStarted}

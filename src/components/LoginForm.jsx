@@ -98,27 +98,27 @@ function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div>
-        <label className="block text-white/90 text-sm font-medium mb-3">
+        <label className="block text-theme-secondary text-sm font-medium mb-3">
           Email
         </label>
         <input 
           type="email" 
           value={email} 
           onChange={(e) => { setEmail(e.target.value); handleInputChange(); }}
-          className="w-full px-4 py-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all duration-300"
+          className="w-full px-4 py-4 rounded-2xl bg-theme-glass border border-theme-glass text-theme-primary placeholder-theme-tertiary focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all duration-300"
           placeholder="you@example.com" 
           required 
         />
       </div>
       <div>
-        <label className="block text-white/90 text-sm font-medium mb-3">
+        <label className="block text-theme-secondary text-sm font-medium mb-3">
           Password
         </label>
         <input 
           type="password" 
           value={password} 
           onChange={(e) => { setPassword(e.target.value); handleInputChange(); }}
-          className="w-full px-4 py-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all duration-300"
+          className="w-full px-4 py-4 rounded-2xl bg-theme-glass border border-theme-glass text-theme-primary placeholder-theme-tertiary focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all duration-300"
           placeholder={isSignUp ? 'Min 8 chars, mixed case, number, symbol' : '••••••••'}
           required 
           minLength={8}
@@ -126,7 +126,7 @@ function LoginForm() {
       </div>
 
       {error && (
-        <div className="p-4 rounded-2xl bg-red-500/20 border border-red-400/30 text-white">
+        <div className="p-4 rounded-2xl bg-red-500/20 border border-red-400/30 text-theme-primary">
           <div className="flex items-center space-x-2">
             <span className="text-2xl">⚠️</span>
             <span className="font-medium">{error.message}</span>
@@ -135,7 +135,7 @@ function LoginForm() {
       )}
 
       {showSuccess && (
-        <div className="p-4 rounded-2xl bg-green-500/20 border border-green-400/30 text-white">
+        <div className="p-4 rounded-2xl bg-green-500/20 border border-green-400/30 text-theme-primary">
           <div className="flex items-center space-x-2">
             <span className="text-2xl">✅</span>
             <span className="font-medium">{successMessage}</span>
@@ -154,7 +154,7 @@ function LoginForm() {
         <button 
           type="button"
           onClick={handleToggleMode}
-          className="text-white/70 hover:text-white transition-colors duration-300 text-sm"
+          className="text-theme-tertiary hover:text-theme-primary transition-colors duration-300 text-sm"
         >
           {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
         </button>

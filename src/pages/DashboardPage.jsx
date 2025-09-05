@@ -72,67 +72,21 @@ function DashboardPage({ user }) {
   }
 
   return (
-    <div className="min-h-screen relative">
-      {/* Animated moving background */}
-      <div 
-        className="fixed inset-0 -z-10" 
-        style={{
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          right: 0, 
-          bottom: 0, 
-          background: 'linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab, #667eea, #764ba2)',
-          backgroundSize: '400% 400%',
-          animation: 'gradientMove 15s ease infinite',
-          zIndex: -10
-        }}
-      ></div>
-      <div 
-        className="fixed inset-0 -z-10" 
-        style={{
-          position: 'fixed', 
-          top: 0, 
-          left: 0, 
-          right: 0, 
-          bottom: 0, 
-          background: 'linear-gradient(45deg, rgba(255,255,255,0.1), rgba(0,0,0,0.1), transparent, rgba(255,255,255,0.05))',
-          backgroundSize: '200% 200%',
-          animation: 'shimmer 8s ease-in-out infinite reverse',
-          zIndex: -9
-        }}
-      ></div>
-      
+    <div className="min-h-screen relative w-full" style={{ margin: 0, padding: 0 }}>
       {/* Floating animated orbs */}
       <div 
-        className="fixed top-20 right-20 w-32 h-32 bg-cyan-400/20 rounded-full blur-2xl" 
+        className="fixed top-20 right-20 w-32 h-32 theme-orb-1 rounded-full blur-2xl" 
         style={{
-          position: 'fixed', 
-          top: '5rem', 
-          right: '5rem', 
-          width: '8rem', 
-          height: '8rem', 
-          backgroundColor: 'rgba(34 211 238 / 0.3)', 
-          borderRadius: '50%', 
-          filter: 'blur(40px)',
           animation: 'floatOrb1 22s ease-in-out infinite'
         }}
       ></div>
       <div 
-        className="fixed bottom-20 left-20 w-40 h-40 bg-purple-400/20 rounded-full blur-2xl" 
+        className="fixed bottom-20 left-20 w-40 h-40 theme-orb-2 rounded-full blur-2xl" 
         style={{
-          position: 'fixed', 
-          bottom: '5rem', 
-          left: '5rem', 
-          width: '10rem', 
-          height: '10rem', 
-          backgroundColor: 'rgba(147 51 234 / 0.3)', 
-          borderRadius: '50%', 
-          filter: 'blur(40px)',
           animation: 'floatOrb2 28s ease-in-out infinite reverse'
         }}
       ></div>
-      <nav className="bg-white/10 backdrop-blur-lg border-b border-white/20 sticky top-0 z-20">
+      <nav className="bg-theme-glass border-b border-theme-glass sticky top-0 z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
             <div 
@@ -144,11 +98,11 @@ function DashboardPage({ user }) {
               title="Go to Mood Entries"
             >
               <span className="text-2xl">🌈</span>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">MoodFlow</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-theme-primary">MoodFlow</h1>
             </div>
             <button 
               onClick={() => signOut()} 
-              className="px-4 py-2 rounded-2xl bg-white/20 text-white hover:bg-white/30 transition-all duration-300 font-medium"
+              className="px-4 py-2 rounded-2xl bg-theme-glass text-theme-primary hover:bg-theme-glass border border-theme-glass hover:border-theme-glass transition-all duration-300 font-medium"
             >
               Logout
             </button>
@@ -157,21 +111,21 @@ function DashboardPage({ user }) {
       </nav>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-12 text-center sm:text-left">
-          <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+          <h2 className="text-3xl sm:text-4xl font-bold text-theme-primary mb-3">
             Hello, {user.email.split('@')[0]} 👋
           </h2>
-          <p className="text-white/80 text-lg sm:text-xl">How are you feeling today?</p>
+          <p className="text-theme-secondary text-lg sm:text-xl">How are you feeling today?</p>
         </div>
         
         {/* Tab Navigation */}
         <div className="mb-8">
-          <div className="flex space-x-1 bg-white/10 backdrop-blur-lg rounded-2xl p-1">
+          <div className="flex space-x-1 bg-theme-glass rounded-2xl p-1">
             <button
               onClick={() => setActiveTab('entries')}
               className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
                 activeTab === 'entries'
                   ? 'bg-white text-purple-700 shadow-lg'
-                  : 'text-white hover:bg-white/20'
+                  : 'text-theme-primary hover:bg-theme-glass'
               }`}
             >
               📝 Mood Entries
@@ -181,7 +135,7 @@ function DashboardPage({ user }) {
               className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
                 activeTab === 'calendar'
                   ? 'bg-white text-purple-700 shadow-lg'
-                  : 'text-white hover:bg-white/20'
+                  : 'text-theme-primary hover:bg-theme-glass'
               }`}
             >
               📅 Calendar
@@ -191,7 +145,7 @@ function DashboardPage({ user }) {
               className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
                 activeTab === 'analytics'
                   ? 'bg-white text-purple-700 shadow-lg'
-                  : 'text-white hover:bg-white/20'
+                  : 'text-theme-primary hover:bg-theme-glass'
               }`}
             >
               📊 Analytics
@@ -209,7 +163,7 @@ function DashboardPage({ user }) {
         )}
         
         {/* Tab Content */}
-        <div style={{ minHeight: '600px' }}>
+        <div style={{ minHeight: '600px' }} className="overflow-hidden">
           {activeTab === 'entries' && (
             <div className="grid lg:grid-cols-2 gap-8">
               <EntryForm onAddEntry={handleAddEntry} />
