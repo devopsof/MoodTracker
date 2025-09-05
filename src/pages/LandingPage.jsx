@@ -30,7 +30,7 @@ const FeatureCard = ({ icon, title, description, delay = 0 }) => {
         <div className="text-5xl mb-6 group-hover:scale-110 transition-transform duration-300">
           {icon}
         </div>
-        <h3 className="text-2xl font-bold text-white mb-4">{title}</h3>
+        <h3 className="text-xl font-bold text-white mb-4">{title}</h3>
         <p className="text-white/80 leading-relaxed">{description}</p>
       </div>
     </motion.div>
@@ -64,7 +64,7 @@ const Step = ({ number, title, description, delay = 0 }) => {
         {number}
       </div>
       <div className="flex-1">
-        <h3 className="text-xl font-semibold text-white mb-2">{title}</h3>
+        <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
         <p className="text-white/70 leading-relaxed">{description}</p>
       </div>
     </motion.div>
@@ -195,10 +195,10 @@ function LandingPage() {
             >
               🌈
             </div>
-            <h1 className="text-5xl sm:text-7xl font-bold text-white mb-8 leading-tight">
+            <h1 className="text-4xl sm:text-6xl font-bold text-white mb-8 leading-tight">
               Track Your <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">Emotional</span> Journey
             </h1>
-            <p className="text-xl sm:text-2xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl text-white/80 mb-12 max-w-3xl mx-auto leading-relaxed">
               Beautiful, intuitive mood tracking with powerful analytics and insights. 
               Discover patterns, build better habits, and nurture your mental wellness.
             </p>
@@ -224,10 +224,10 @@ function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
               Powerful Features for Your Wellbeing
             </h2>
-            <p className="text-xl text-white/70 max-w-2xl mx-auto">
+            <p className="text-lg text-white/70 max-w-2xl mx-auto">
               Everything you need to understand and improve your emotional health
             </p>
           </motion.div>
@@ -264,10 +264,10 @@ function LandingPage() {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
               See Your Progress in Action
             </h2>
-            <p className="text-xl text-white/70 max-w-2xl mx-auto">
+            <p className="text-lg text-white/70 max-w-2xl mx-auto">
               Beautiful visualizations that make your emotional journey clear and actionable
             </p>
           </motion.div>
@@ -282,8 +282,8 @@ function LandingPage() {
               className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
             >
               <div>
-                <h3 className="text-3xl font-bold text-white mb-6">Beautiful Analytics Dashboard</h3>
-                <p className="text-white/80 text-lg mb-8 leading-relaxed">
+                <h3 className="text-2xl font-bold text-white mb-6">Beautiful Analytics Dashboard</h3>
+                <p className="text-white/80 text-base mb-8 leading-relaxed">
                   Transform your mood data into stunning visualizations. Our advanced analytics help you understand patterns, 
                   identify triggers, and celebrate progress with interactive charts and insights.
                 </p>
@@ -340,8 +340,8 @@ function LandingPage() {
               className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
             >
               <div className="lg:order-2">
-                <h3 className="text-3xl font-bold text-white mb-6">Year in Pixels Heatmap</h3>
-                <p className="text-white/80 text-lg mb-8 leading-relaxed">
+                <h3 className="text-2xl font-bold text-white mb-6">Year in Pixels Heatmap</h3>
+                <p className="text-white/80 text-base mb-8 leading-relaxed">
                   See your entire emotional year at a glance with our beautiful calendar heatmap. 
                   Each day is a pixel colored by your mood, creating a stunning visual story of your journey.
                 </p>

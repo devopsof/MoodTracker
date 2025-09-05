@@ -128,10 +128,10 @@ function AppContent() {
         <div 
           className="fixed inset-0 -z-10"
           style={{
-            background: 'linear-gradient(-45deg, #0a0a1a, #101020, #0e1428, #0c1f35, #1a1a35, #2d1f4f)',
+            background: 'linear-gradient(-45deg, #dc6b47, #d1375e, #1f8bb8, #1fb894, #5a73d9, #6a4291)',
             backgroundSize: '400% 400%',
             animation: 'gradientMove 15s ease infinite',
-            opacity: isDark ? 1 : 0,
+            opacity: isDark ? 0 : 1,
             transition: 'opacity 1.5s ease-in-out'
           }}
         />

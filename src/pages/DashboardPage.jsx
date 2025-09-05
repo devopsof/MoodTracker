@@ -37,13 +37,16 @@ function DashboardPage({ user }) {
   }, [user?.email])
 
   const handleAddEntry = async (newEntry) => {
+    const now = new Date()
     const entry = {
       id: Date.now(), // Temporary ID for UI, API will provide real ID
-      date: new Date().toLocaleDateString('en-US', { 
+      date: now.toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric', 
         year: 'numeric' 
       }),
+      createdAt: now.toISOString(), // Add proper timestamp for sorting
+      timestamp: now.toISOString(), // Backup timestamp field
       ...newEntry
     }
     

@@ -15,4 +15,17 @@ export default defineConfig({
   optimizeDeps: {
     include: ['buffer'],
   },
+  build: {
+    rollupOptions: {
+      external: (id) => {
+        // Ignore framer-motion globalThis config issue
+        if (id.includes('globalThis-config.mjs')) {
+          return false
+        }
+      },
+      output: {
+        manualChunks: undefined
+      }
+    }
+  }
 })

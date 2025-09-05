@@ -1,8 +1,12 @@
 import React, { useState } from 'react'
 import { MoodEmojis, QuickMoodEmojis, IntensityLabels, TAG_CATEGORIES } from '../utils/constants'
 import PromptSelector from './PromptSelector'
+import AISuggestion from './AISuggestion'
+import { analyzeSentiment } from '../utils/api'
+import { useAuth } from '../context/AuthContext'
 
 function EntryForm({ onAddEntry }) {
+  const { user } = useAuth()
   const [mood, setMood] = useState(3)
   const [intensity, setIntensity] = useState(5)
   const [note, setNote] = useState('')
@@ -11,6 +15,11 @@ function EntryForm({ onAddEntry }) {
   const [quickMoodMode, setQuickMoodMode] = useState(false)
   const [showPromptSelector, setShowPromptSelector] = useState(false)
   const [selectedPrompt, setSelectedPrompt] = useState(null)
+  
+  // AI Sentiment Analysis state
+  const [aiAnalysis, setAiAnalysis] = useState(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [showAiSuggestion, setShowAiSuggestion] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -82,6 +91,55 @@ function EntryForm({ onAddEntry }) {
         setNote(prompt.placeholder)
       }
     }
+  }
+
+  // AI Sentiment Analysis Functions
+  const handleAnalyzeText = async () => {
+    if (!note.trim() || !user?.email) {
+      return
+    }
+
+    setIsAnalyzing(true)
+    setShowAiSuggestion(true)
+    
+    try {
+      console.log('🤖 Starting AI analysis...')
+      const response = await analyzeSentiment(note, user.email)
+      
+      if (response.success && response.analysis) {
+        setAiAnalysis(response.analysis)
+        console.log('✅ AI Analysis completed:', response.analysis)
+      } else {
+        console.error('❌ AI Analysis failed:', response)
+        setAiAnalysis(null)
+      }
+    } catch (error) {
+      console.error('❌ AI Analysis error:', error)
+      setAiAnalysis(null)
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
+  const handleAcceptAiSuggestion = (suggestedMood) => {
+    setMood(suggestedMood)
+    setShowAiSuggestion(false)
+    // Add AI tag to indicate this was AI-assisted
+    if (!selectedTags.includes('ai-assisted')) {
+      setSelectedTags(prev => [...prev, 'ai-assisted'])
+    }
+  }
+
+  const handleModifyAiSuggestion = (suggestedMood) => {
+    // Set the mood as a starting point but let user adjust
+    setMood(suggestedMood)
+    setShowAiSuggestion(false)
+    // Focus on the mood slider so user can adjust
+  }
+
+  const handleDismissAiSuggestion = () => {
+    setShowAiSuggestion(false)
+    setAiAnalysis(null)
   }
 
   return (
@@ -266,7 +324,42 @@ function EntryForm({ onAddEntry }) {
             rows="4"
             placeholder="What's on your mind?"
           />
+          
+          {/* AI Analysis Button */}
+          {note.trim().length > 10 && !quickMoodMode && (
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={handleAnalyzeText}
+                disabled={isAnalyzing}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-medium text-sm transition-all duration-300 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <div className="animate-spin text-sm">🤖</div>
+                    <span>Analyzing...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🤖</span>
+                    <span>Get AI Mood Suggestion</span>
+                  </>
+                )}
+              </button>
+            </div>
+          )}
         </div>
+        
+        {/* AI Suggestion Component */}
+        {showAiSuggestion && (
+          <AISuggestion
+            analysis={aiAnalysis}
+            onAccept={handleAcceptAiSuggestion}
+            onModify={handleModifyAiSuggestion}
+            onDismiss={handleDismissAiSuggestion}
+            isLoading={isAnalyzing}
+          />
+        )}
         
         {/* Tags Section - Only show when not in quick mood mode */}
         {!quickMoodMode && (

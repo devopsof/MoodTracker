@@ -1,0 +1,12 @@
+{
+  "name": "moodflow-sentiment-analysis",
+  "version": "1.0.0",
+  "description": "AI-powered sentiment analysis for MoodFlow using AWS Comprehend and Hugging Face",
+  "main": "index.js",
+  "dependencies": {
+    "aws-sdk": "^2.1490.0"
+  },
+  "keywords": ["aws", "lambda", "sentiment", "ai", "comprehend", "hugging-face"],
+  "author": "MoodFlow",
+  "license": "MIT"
+}
