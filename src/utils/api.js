@@ -1,6 +1,6 @@
 // API utility functions for MoodTracker AWS backend
 
-const API_BASE_URL = 'https://e7a99njzra.execute-api.us-east-1.amazonaws.com/dev'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://e7a99njzra.execute-api.us-east-1.amazonaws.com/dev'
 
 /**
  * Add a new mood entry via API
@@ -9,7 +9,7 @@ const API_BASE_URL = 'https://e7a99njzra.execute-api.us-east-1.amazonaws.com/dev
  * @returns {Promise<Object>} Created entry response
  */
 export const createEntry = async (entry, userEmail) => {
-  console.log('🚀 createEntry called:', { entry, userEmail })
+  // console.log('🚀 createEntry called:', { entry, userEmail }) // Debug logging disabled
   
   try {
     const requestBody = {
@@ -22,8 +22,7 @@ export const createEntry = async (entry, userEmail) => {
       })
     }
     
-    console.log('📝 Request body:', requestBody)
-    console.log('📧 User email:', userEmail)
+    // console.log('📝 Request body:', requestBody) // Debug logging disabled
     
     const response = await fetch(`${API_BASE_URL}/entries?userEmail=${encodeURIComponent(userEmail)}`, {
       method: 'POST',
@@ -35,8 +34,7 @@ export const createEntry = async (entry, userEmail) => {
       body: JSON.stringify(requestBody)
     })
 
-    console.log('📡 Response status:', response.status)
-    console.log('📡 Response headers:', response.headers)
+    // console.log('📡 Response status:', response.status) // Debug logging disabled
     
     if (!response.ok) {
       const errorText = await response.text()
@@ -45,7 +43,7 @@ export const createEntry = async (entry, userEmail) => {
     }
 
     const data = await response.json()
-    console.log('✅ Entry created successfully:', data)
+    // console.log('✅ Entry created successfully:', data) // Debug logging disabled
     
     // Transform API response to match existing UI format
     return {
@@ -67,11 +65,11 @@ export const createEntry = async (entry, userEmail) => {
  * @returns {Promise<Array>} Array of mood entries
  */
 export const loadEntries = async (userEmail) => {
-  console.log('📥 loadEntries called for:', userEmail)
+  // console.log('📥 loadEntries called for:', userEmail) // Debug logging disabled
   
   try {
     const url = `${API_BASE_URL}/entries?userEmail=${encodeURIComponent(userEmail)}`
-    console.log('🌍 Fetching from URL:', url)
+    // console.log('🌍 Fetching from URL:', url) // Debug logging disabled
     
     const response = await fetch(url, {
       method: 'GET',
@@ -87,7 +85,7 @@ export const loadEntries = async (userEmail) => {
     }
 
     const data = await response.json()
-    console.log('✅ Entries loaded successfully:', data)
+    // console.log('✅ Entries loaded successfully:', data) // Debug logging disabled
     
     // Return entries in the format expected by UI, sorted by creation time (newest first)
     const entries = data.entries || []
@@ -98,7 +96,7 @@ export const loadEntries = async (userEmail) => {
       return timeB - timeA
     })
     
-    console.log('📋 Sorted entries:', sortedEntries)
+    // console.log('📋 Sorted entries:', sortedEntries) // Debug logging disabled
     return sortedEntries
   } catch (error) {
     console.error('❌ Failed to load entries:', error)
@@ -144,4 +142,42 @@ export const clearEntries = (userEmail) => {
 
 export const getStorageInfo = () => {
   return { totalSize: 0, itemCount: 0, totalSizeKB: 0 }
+}
+
+/**
+ * Fetch analytics data from API
+ * @param {string} userEmail - User's email for identification
+ * @param {number} days - Number of days to analyze (default 7)
+ * @returns {Promise<Object>} Analytics data
+ */
+export const loadAnalytics = async (userEmail, days = 7) => {
+  console.log('📊 loadAnalytics called for:', userEmail, 'days:', days)
+  
+  try {
+    const url = `${API_BASE_URL}/analytics?userEmail=${encodeURIComponent(userEmail)}&days=${days}`
+    console.log('🌍 Fetching analytics from URL:', url)
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        // TODO: Add Authorization header with JWT token when Cognito is set up
+        // 'Authorization': `Bearer ${getAuthToken()}`
+      }
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ Analytics API Error:', errorText)
+      throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('✅ Analytics loaded successfully:', data)
+    
+    return data
+  } catch (error) {
+    console.error('❌ Failed to load analytics:', error)
+    throw new Error(`Failed to load analytics: ${error.message}`)
+  }
 }

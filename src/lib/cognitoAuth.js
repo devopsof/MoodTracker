@@ -210,7 +210,7 @@ export const getCurrentSession = () => {
       }
 
       const user = {
-        email: cognitoUser.getUsername(),
+        email: null, // Will be set from attributes
         username: cognitoUser.getUsername(),
         attributes: {},
       }
@@ -221,7 +221,14 @@ export const getCurrentSession = () => {
           attributes.forEach((attribute) => {
             user.attributes[attribute.getName()] = attribute.getValue()
           })
+          // Use email attribute as the primary email, fallback to username
+          user.email = user.attributes.email || cognitoUser.getUsername()
+        } else {
+          // Fallback if attributes fail to load
+          user.email = cognitoUser.getUsername()
         }
+
+        // Debug: User authentication data loaded
 
         resolve({
           user,

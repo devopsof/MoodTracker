@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './app.jsx'
-import { AuthProvider } from './context/AuthContext.jsx'
+import { AuthProvider } from './context/AuthContext'
 import ErrorBoundary from './components/ErrorBoundary.jsx'
 import './index.css'
 

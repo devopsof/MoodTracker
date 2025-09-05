@@ -1,0 +1,16 @@
+{
+  "name": "moodtracker-analytics",
+  "version": "1.0.0",
+  "description": "Analytics Lambda function for MoodTracker app",
+  "main": "index.js",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.400.0",
+    "@aws-sdk/lib-dynamodb": "^3.400.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["mood", "analytics", "lambda", "dynamodb"],
+  "author": "",
+  "license": "MIT"
+}

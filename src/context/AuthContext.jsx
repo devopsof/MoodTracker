@@ -1,4 +1,3 @@
-// AuthContext for managing AWS Cognito authentication state
 import React, { createContext, useContext, useReducer, useEffect } from 'react'
 import {
   signUp as cognitoSignUp,
@@ -6,7 +5,6 @@ import {
   signIn as cognitoSignIn,
   signOut as cognitoSignOut,
   getCurrentSession,
-  refreshSession,
   resendConfirmationCode as cognitoResendConfirmationCode,
 } from '../lib/cognitoAuth'
 
@@ -17,43 +15,31 @@ const initialState = {
   isAuthenticated: false,
   isLoading: true,
   error: null,
-  authStatus: 'checking', // 'checking', 'signedOut', 'signedIn', 'needsConfirmation'
-  pendingVerificationEmail: null, // Store email for verification flow
+  authStatus: 'checking',
+  pendingVerificationEmail: null,
 }
 
 // Action types
-const actionTypes = {
+const actions = {
   SET_LOADING: 'SET_LOADING',
   SET_ERROR: 'SET_ERROR',
   CLEAR_ERROR: 'CLEAR_ERROR',
   SET_USER: 'SET_USER',
   CLEAR_USER: 'CLEAR_USER',
   SET_AUTH_STATUS: 'SET_AUTH_STATUS',
-  SET_TOKENS: 'SET_TOKENS',
-  SET_PENDING_VERIFICATION_EMAIL: 'SET_PENDING_VERIFICATION_EMAIL',
+  SET_PENDING_EMAIL: 'SET_PENDING_EMAIL',
 }
 
-// Reducer function
+// Reducer
 const authReducer = (state, action) => {
   switch (action.type) {
-    case actionTypes.SET_LOADING:
-      return {
-        ...state,
-        isLoading: action.payload,
-      }
-    case actionTypes.SET_ERROR:
-      return {
-        ...state,
-        error: action.payload,
-        // Don't automatically set isLoading to false here
-        // Each action handler should manage isLoading explicitly
-      }
-    case actionTypes.CLEAR_ERROR:
-      return {
-        ...state,
-        error: null,
-      }
-    case actionTypes.SET_USER:
+    case actions.SET_LOADING:
+      return { ...state, isLoading: action.payload }
+    case actions.SET_ERROR:
+      return { ...state, error: action.payload, isLoading: false }
+    case actions.CLEAR_ERROR:
+      return { ...state, error: null }
+    case actions.SET_USER:
       return {
         ...state,
         user: action.payload.user,
@@ -63,7 +49,7 @@ const authReducer = (state, action) => {
         isLoading: false,
         error: null,
       }
-    case actionTypes.CLEAR_USER:
+    case actions.CLEAR_USER:
       return {
         ...state,
         user: null,
@@ -71,24 +57,15 @@ const authReducer = (state, action) => {
         isAuthenticated: false,
         authStatus: 'signedOut',
         isLoading: false,
-        error: null,
       }
-    case actionTypes.SET_AUTH_STATUS:
+    case actions.SET_AUTH_STATUS:
       return {
         ...state,
         authStatus: action.payload,
         isLoading: false,
       }
-    case actionTypes.SET_TOKENS:
-      return {
-        ...state,
-        tokens: action.payload,
-      }
-    case actionTypes.SET_PENDING_VERIFICATION_EMAIL:
-      return {
-        ...state,
-        pendingVerificationEmail: action.payload,
-      }
+    case actions.SET_PENDING_EMAIL:
+      return { ...state, pendingVerificationEmail: action.payload }
     default:
       return state
   }
@@ -97,128 +74,86 @@ const authReducer = (state, action) => {
 // Create context
 const AuthContext = createContext()
 
-// AuthProvider component
-export const AuthProvider = ({ children }) => {
+// Provider component
+export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState)
 
-  // Check for existing session on mount
+  // Check auth on mount with timeout
   useEffect(() => {
-    checkAuthState()
+    checkAuth()
   }, [])
 
-  // Auto-refresh tokens before they expire
-  useEffect(() => {
-    if (state.isAuthenticated && state.tokens) {
-      const refreshInterval = setInterval(() => {
-        handleRefreshSession()
-      }, 50 * 60 * 1000) // Refresh every 50 minutes (tokens expire in 60 minutes)
+  const checkAuth = async () => {
+    console.log('🔍 Checking authentication...')
+    
+    const timeoutId = setTimeout(() => {
+      console.log('⏰ Auth check timeout - signing out')
+      dispatch({ type: actions.CLEAR_USER })
+    }, 10000)
 
-      return () => clearInterval(refreshInterval)
-    }
-  }, [state.isAuthenticated, state.tokens])
-
-  const checkAuthState = async () => {
     try {
-      console.log('🔍 Checking auth state...')
-      dispatch({ type: actionTypes.SET_LOADING, payload: true })
       const session = await getCurrentSession()
+      clearTimeout(timeoutId)
       
-      if (session) {
-        console.log('✅ Found existing session:', session)
+      if (session?.user) {
         dispatch({
-          type: actionTypes.SET_USER,
+          type: actions.SET_USER,
           payload: {
             user: session.user,
             tokens: session.tokens,
           },
         })
       } else {
-        console.log('❌ No existing session found')
-        dispatch({ type: actionTypes.CLEAR_USER })
+        dispatch({ type: actions.CLEAR_USER })
       }
     } catch (error) {
-      console.error('❌ Error checking auth state:', error)
-      dispatch({ type: actionTypes.CLEAR_USER })
+      console.error('Auth check failed:', error)
+      clearTimeout(timeoutId)
+      dispatch({ type: actions.CLEAR_USER })
     }
   }
 
-  const handleRefreshSession = async () => {
+  const signUp = async ({ email, password }) => {
+    dispatch({ type: actions.SET_LOADING, payload: true })
+    dispatch({ type: actions.CLEAR_ERROR })
+    
     try {
-      const result = await refreshSession()
-      dispatch({
-        type: actionTypes.SET_TOKENS,
-        payload: result.tokens,
-      })
-    } catch (error) {
-      console.error('Error refreshing session:', error)
-      // If refresh fails, sign out the user
-      await handleSignOut()
-    }
-  }
-
-  const handleSignUp = async ({ email, password }) => {
-    try {
-      dispatch({ type: actionTypes.SET_LOADING, payload: true })
-      dispatch({ type: actionTypes.CLEAR_ERROR })
-      
       const result = await cognitoSignUp({ email, password })
       
-      // Store the email for verification flow
-      dispatch({ 
-        type: actionTypes.SET_PENDING_VERIFICATION_EMAIL, 
-        payload: email 
-      })
-      
-      dispatch({ 
-        type: actionTypes.SET_AUTH_STATUS, 
-        payload: 'needsConfirmation' 
-      })
+      dispatch({ type: actions.SET_PENDING_EMAIL, payload: email })
+      dispatch({ type: actions.SET_AUTH_STATUS, payload: 'needsConfirmation' })
       
       return {
         success: true,
-        userConfirmed: result.userConfirmed,
-        message: 'Sign up successful! Please check your email for verification code.',
+        message: 'Sign up successful! Please check your email.',
       }
     } catch (error) {
-      // Don't change authStatus on sign-up errors - stay in current state
       dispatch({
-        type: actionTypes.SET_ERROR,
+        type: actions.SET_ERROR,
         payload: {
           code: error.code,
           message: getErrorMessage(error),
         },
       })
-      // Still set loading to false
-      dispatch({ type: actionTypes.SET_LOADING, payload: false })
       throw error
     }
   }
 
-  const handleConfirmSignUp = async ({ email, code }) => {
+  const confirmSignUp = async ({ email, code }) => {
+    dispatch({ type: actions.SET_LOADING, payload: true })
+    dispatch({ type: actions.CLEAR_ERROR })
+    
     try {
-      dispatch({ type: actionTypes.SET_LOADING, payload: true })
-      dispatch({ type: actionTypes.CLEAR_ERROR })
-      
       await cognitoConfirmSignUp({ email, code })
-      
-      // Clear the pending verification email
-      dispatch({ 
-        type: actionTypes.SET_PENDING_VERIFICATION_EMAIL, 
-        payload: null 
-      })
-      
-      dispatch({ 
-        type: actionTypes.SET_AUTH_STATUS, 
-        payload: 'signedOut' 
-      })
+      dispatch({ type: actions.SET_AUTH_STATUS, payload: 'signedOut' })
       
       return {
         success: true,
-        message: 'Email verification successful! You can now sign in.',
+        message: 'Email verified! Please sign in.',
       }
     } catch (error) {
       dispatch({
-        type: actionTypes.SET_ERROR,
+        type: actions.SET_ERROR,
         payload: {
           code: error.code,
           message: getErrorMessage(error),
@@ -228,143 +163,105 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const handleSignIn = async ({ email, password }) => {
+  const signIn = async ({ email, password }) => {
+    dispatch({ type: actions.SET_LOADING, payload: true })
+    dispatch({ type: actions.CLEAR_ERROR })
+    
     try {
-      dispatch({ type: actionTypes.SET_LOADING, payload: true })
-      dispatch({ type: actionTypes.CLEAR_ERROR })
-      
       const result = await cognitoSignIn({ email, password })
       
       dispatch({
-        type: actionTypes.SET_USER,
+        type: actions.SET_USER,
         payload: {
           user: result.user,
           tokens: result.tokens,
         },
       })
       
-      return {
-        success: true,
-        user: result.user,
-      }
+      return { success: true, user: result.user }
     } catch (error) {
       dispatch({
-        type: actionTypes.SET_ERROR,
+        type: actions.SET_ERROR,
         payload: {
           code: error.code,
           message: getErrorMessage(error),
         },
       })
-      // Explicitly set loading to false
-      dispatch({ type: actionTypes.SET_LOADING, payload: false })
       throw error
     }
   }
 
-  const handleSignOut = async () => {
+  const signOut = async () => {
+    dispatch({ type: actions.SET_LOADING, payload: true })
+    
     try {
-      dispatch({ type: actionTypes.SET_LOADING, payload: true })
-      
       await cognitoSignOut()
-      dispatch({ type: actionTypes.CLEAR_USER })
-      
-      return { success: true }
     } catch (error) {
-      console.error('Error signing out:', error)
-      // Force clear user state even if signout fails
-      dispatch({ type: actionTypes.CLEAR_USER })
-      return { success: true }
+      console.error('Sign out error:', error)
+    } finally {
+      dispatch({ type: actions.CLEAR_USER })
     }
   }
 
-  const handleResendConfirmationCode = async ({ email }) => {
+  const resendConfirmationCode = async ({ email }) => {
     try {
-      dispatch({ type: actionTypes.SET_LOADING, payload: true })
-      dispatch({ type: actionTypes.CLEAR_ERROR })
-      
       await cognitoResendConfirmationCode({ email })
-      
-      dispatch({ type: actionTypes.SET_LOADING, payload: false })
-      
       return {
         success: true,
-        message: 'Verification code sent! Please check your email.',
+        message: 'Confirmation code sent!',
       }
     } catch (error) {
-      dispatch({
-        type: actionTypes.SET_ERROR,
-        payload: {
-          code: error.code,
-          message: getErrorMessage(error),
-        },
-      })
-      throw error
+      throw new Error(getErrorMessage(error))
     }
   }
 
   const clearError = () => {
-    dispatch({ type: actionTypes.CLEAR_ERROR })
+    dispatch({ type: actions.CLEAR_ERROR })
   }
 
-  // Helper function to get user-friendly error messages
+  // Error message helper
   const getErrorMessage = (error) => {
     switch (error.code) {
-      case 'UsernameExistsException':
-        return 'An account with this email already exists.'
-      case 'InvalidPasswordException':
-        return 'Password must be at least 8 characters and contain uppercase, lowercase, number, and special character.'
-      case 'InvalidParameterException':
-        return 'Please check your input and try again.'
-      case 'CodeMismatchException':
-        return 'Invalid verification code. Please try again.'
-      case 'ExpiredCodeException':
-        return 'Verification code has expired. Please request a new one.'
+      case 'UserNotFoundException':
+        return 'No account found with this email.'
       case 'NotAuthorizedException':
         return 'Incorrect email or password.'
       case 'UserNotConfirmedException':
-        return 'Please verify your email address before signing in.'
-      case 'UserNotFoundException':
-        return 'No account found with this email address.'
-      case 'TooManyRequestsException':
-        return 'Too many requests. Please wait a moment and try again.'
-      case 'LimitExceededException':
-        return 'Request limit exceeded. Please try again later.'
+        return 'Please verify your email first.'
+      case 'InvalidPasswordException':
+        return 'Password must be at least 8 characters.'
+      case 'UsernameExistsException':
+        return 'Account already exists.'
+      case 'CodeMismatchException':
+        return 'Invalid verification code.'
+      case 'ExpiredCodeException':
+        return 'Code expired. Request a new one.'
       default:
-        return error.message || 'An unexpected error occurred. Please try again.'
+        return error.message || 'Something went wrong.'
     }
   }
 
-  const contextValue = {
-    // State
-    user: state.user,
-    tokens: state.tokens,
-    isAuthenticated: state.isAuthenticated,
-    isLoading: state.isLoading,
-    error: state.error,
-    authStatus: state.authStatus,
-    pendingVerificationEmail: state.pendingVerificationEmail,
-    
-    // Actions
-    signUp: handleSignUp,
-    confirmSignUp: handleConfirmSignUp,
-    signIn: handleSignIn,
-    signOut: handleSignOut,
-    resendConfirmationCode: handleResendConfirmationCode,
+  const value = {
+    ...state,
+    signUp,
+    confirmSignUp,
+    signIn,
+    signOut,
+    resendConfirmationCode,
     clearError,
-    checkAuthState,
   }
 
   return (
-    <AuthContext.Provider value={contextValue}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )
 }
 
-// Hook to use auth context
-export const useAuth = () => {
+// Hook
+export function useAuth() {
   const context = useContext(AuthContext)
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider')
   }
   return context

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoodTracker App Access</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .link-box {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 15px;
+            border-left: 4px solid #4CAF50;
+        }
+        .working { border-left-color: #4CAF50; }
+        .issue { border-left-color: #ff6b6b; }
+        a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .status {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+        .button {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 12px 24px;
+            border-radius: 10px;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        .button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .dns-help {
+            background: rgba(255,193,7,0.2);
+            border-left-color: #ffc107;
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌈 MoodTracker App Access</h1>
+        
+        <div class="link-box working">
+            <h2>✅ Working Direct Link (RECOMMENDED)</h2>
+            <a href="https://moodtracker-frontend-v2.s3.amazonaws.com/index.html" target="_blank" class="button">
+                🚀 Open MoodTracker App (HTTPS)
+            </a>
+            <div class="status">
+                This direct S3 HTTPS link should work reliably on all devices and networks.
+            </div>
+        </div>
+
+        <div class="link-box issue">
+            <h2>⚠️ Website Endpoint (May Have DNS Issues)</h2>
+            <a href="http://moodtracker-frontend-v2.s3-website-us-east-1.amazonaws.com" target="_blank" class="button">
+                🌐 Try Website Endpoint (HTTP)
+            </a>
+            <div class="status">
+                This may not work due to DNS caching issues on your network.
+            </div>
+        </div>
+
+        <div class="link-box dns-help">
+            <h2>🔧 If Links Don't Work</h2>
+            <p><strong>Try these solutions:</strong></p>
+            <ul>
+                <li><strong>Flush DNS cache:</strong> Run <code>ipconfig /flushdns</code> in Command Prompt (as admin)</li>
+                <li><strong>Change DNS servers:</strong> Use Google DNS (8.8.8.8, 8.8.4.4) or Cloudflare (1.1.1.1)</li>
+                <li><strong>Try incognito/private browsing mode</strong></li>
+                <li><strong>Try mobile data instead of WiFi</strong></li>
+                <li><strong>Wait 5-10 minutes</strong> for DNS propagation</li>
+            </ul>
+        </div>
+
+        <div class="link-box working">
+            <h2>📱 What You Should See</h2>
+            <p>Once the app loads, you should see:</p>
+            <ul>
+                <li>🌈 <strong>MoodFlow</strong> logo and gradient background</li>
+                <li>📝 <strong>Login/Sign Up form</strong> without any error messages</li>
+                <li>⏳ <strong>Loading screen</strong> that times out after 10 seconds max</li>
+                <li>🚫 <strong>NO "useAuth must be used within AuthProvider" error</strong></li>
+            </ul>
+        </div>
+
+        <div class="link-box working">
+            <h2>✅ Issues Fixed</h2>
+            <ul>
+                <li>✅ Authentication context errors resolved</li>
+                <li>✅ Mobile timeout protection added</li>
+                <li>✅ Clean component imports</li>
+                <li>✅ Proper error boundaries</li>
+                <li>✅ Build and deployment working</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

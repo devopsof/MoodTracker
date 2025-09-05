@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import EntryForm from '../components/EntryForm'
 import EntryList from '../components/EntryList'
+import Analytics from '../components/Analytics'
+import CalendarHeatmap from '../components/CalendarHeatmap'
 import { loadEntries, addEntry } from '../utils/api'
 import { useAuth } from '../context/AuthContext'
 
@@ -9,6 +11,7 @@ function DashboardPage({ user }) {
   const [entries, setEntries] = useState([])
   const [showSuccess, setShowSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('entries')
 
   // Load entries from API when component mounts or user changes
   useEffect(() => {
@@ -18,10 +21,8 @@ function DashboardPage({ user }) {
       setIsLoading(true)
       
       if (user && user.email) {
-        console.log('🔄 Loading entries for user:', user.email)
         try {
           const savedEntries = await loadEntries(user.email)
-          console.log('📊 Loaded entries:', savedEntries)
           setEntries(savedEntries)
         } catch (error) {
           console.error('❌ Failed to load entries:', error)
@@ -154,6 +155,43 @@ function DashboardPage({ user }) {
           </h2>
           <p className="text-white/80 text-lg sm:text-xl">How are you feeling today?</p>
         </div>
+        
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <div className="flex space-x-1 bg-white/10 backdrop-blur-lg rounded-2xl p-1">
+            <button
+              onClick={() => setActiveTab('entries')}
+              className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                activeTab === 'entries'
+                  ? 'bg-white text-purple-700 shadow-lg'
+                  : 'text-white hover:bg-white/20'
+              }`}
+            >
+              📝 Mood Entries
+            </button>
+            <button
+              onClick={() => setActiveTab('calendar')}
+              className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                activeTab === 'calendar'
+                  ? 'bg-white text-purple-700 shadow-lg'
+                  : 'text-white hover:bg-white/20'
+              }`}
+            >
+              📅 Calendar
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                activeTab === 'analytics'
+                  ? 'bg-white text-purple-700 shadow-lg'
+                  : 'text-white hover:bg-white/20'
+              }`}
+            >
+              📊 Analytics
+            </button>
+          </div>
+        </div>
+        
         {showSuccess && (
           <div className="mb-8 p-4 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-white backdrop-blur-sm">
             <div className="flex items-center space-x-2">
@@ -162,9 +200,21 @@ function DashboardPage({ user }) {
             </div>
           </div>
         )}
-        <div className="grid lg:grid-cols-2 gap-8">
-          <EntryForm onAddEntry={handleAddEntry} />
-          <EntryList entries={entries} isLoading={isLoading} />
+        
+        {/* Tab Content */}
+        <div style={{ minHeight: '600px' }}>
+          {activeTab === 'entries' && (
+            <div className="grid lg:grid-cols-2 gap-8">
+              <EntryForm onAddEntry={handleAddEntry} />
+              <EntryList entries={entries} isLoading={isLoading} />
+            </div>
+          )}
+          {activeTab === 'calendar' && (
+            <CalendarHeatmap userEmail={user.email} />
+          )}
+          {activeTab === 'analytics' && (
+            <Analytics userEmail={user.email} />
+          )}
         </div>
       </div>
     </div>

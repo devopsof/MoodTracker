@@ -1,24 +1,44 @@
 import React, { useState } from 'react'
-
-const MoodEmojis = {
-  1: '😔',
-  2: '😕', 
-  3: '😐',
-  4: '😊',
-  5: '😄'
-}
+import { MoodEmojis, TAG_CATEGORIES } from '../utils/constants'
 
 function EntryForm({ onAddEntry }) {
   const [mood, setMood] = useState(3)
   const [note, setNote] = useState('')
+  const [selectedTags, setSelectedTags] = useState([])
+  const [customTag, setCustomTag] = useState('')
 
   const handleSubmit = (e) => {
     e.preventDefault()
     if (onAddEntry) {
-      onAddEntry({ mood, note })
+      onAddEntry({ 
+        mood, 
+        note, 
+        tags: selectedTags 
+      })
     }
     setNote('')
     setMood(3)
+    setSelectedTags([])
+    setCustomTag('')
+  }
+
+  const handleTagToggle = (tagName) => {
+    setSelectedTags(prev => 
+      prev.includes(tagName) 
+        ? prev.filter(tag => tag !== tagName)
+        : [...prev, tagName]
+    )
+  }
+
+  const handleAddCustomTag = () => {
+    if (customTag.trim() && !selectedTags.includes(customTag.trim().toLowerCase())) {
+      setSelectedTags(prev => [...prev, customTag.trim().toLowerCase()])
+      setCustomTag('')
+    }
+  }
+
+  const handleRemoveTag = (tagName) => {
+    setSelectedTags(prev => prev.filter(tag => tag !== tagName))
   }
 
   return (
@@ -72,6 +92,88 @@ function EntryForm({ onAddEntry }) {
             placeholder="What's on your mind?"
           />
         </div>
+        
+        {/* Tags Section */}
+        <div>
+          <label className="block text-white/90 text-base font-medium mb-4">
+            Add tags (optional) 🏷️
+          </label>
+          
+          {/* Quick Tags */}
+          <div className="mb-4">
+            <p className="text-white/70 text-sm mb-3">Quick tags:</p>
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(TAG_CATEGORIES).map(([tagName, tagInfo]) => (
+                <button
+                  key={tagName}
+                  type="button"
+                  onClick={() => handleTagToggle(tagName)}
+                  className={`px-3 py-2 rounded-full text-sm font-medium transition-all duration-300 border ${
+                    selectedTags.includes(tagName)
+                      ? `${tagInfo.color} text-white border-white/30 shadow-lg scale-105`
+                      : 'bg-white/10 text-white/80 border-white/20 hover:bg-white/20 hover:scale-105'
+                  }`}
+                >
+                  <span className="mr-1">{tagInfo.emoji}</span>
+                  {tagName}
+                </button>
+              ))}
+            </div>
+          </div>
+          
+          {/* Custom Tag Input */}
+          <div className="mb-4">
+            <p className="text-white/70 text-sm mb-3">Or add your own:</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customTag}
+                onChange={(e) => setCustomTag(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCustomTag())}
+                className="flex-1 px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all duration-300"
+                placeholder="Enter custom tag..."
+                maxLength={20}
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomTag}
+                disabled={!customTag.trim()}
+                className="px-4 py-2 rounded-xl bg-white/20 text-white hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+          
+          {/* Selected Tags Display */}
+          {selectedTags.length > 0 && (
+            <div>
+              <p className="text-white/70 text-sm mb-3">Selected tags:</p>
+              <div className="flex flex-wrap gap-2">
+                {selectedTags.map((tag) => {
+                  const tagInfo = TAG_CATEGORIES[tag] || { emoji: '🏷️', color: 'bg-gray-500/80' }
+                  return (
+                    <div
+                      key={tag}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium ${tagInfo.color} text-white border border-white/30 shadow-lg`}
+                    >
+                      <span>{tagInfo.emoji}</span>
+                      <span>{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="ml-1 text-white/80 hover:text-white transition-colors"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+        
         <button
           type="submit"
           className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-white to-gray-100 text-purple-700 font-semibold hover:from-gray-100 hover:to-white transform hover:scale-[1.02] transition-all duration-300 shadow-xl"

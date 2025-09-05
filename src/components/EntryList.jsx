@@ -1,20 +1,5 @@
 import React from 'react'
-
-const MoodEmojis = {
-  1: '😔',
-  2: '😕', 
-  3: '😐',
-  4: '😊',
-  5: '😄'
-}
-
-const MoodColors = {
-  1: 'from-slate-500 to-slate-600',
-  2: 'from-orange-400 to-red-500', 
-  3: 'from-blue-400 to-cyan-500',
-  4: 'from-green-400 to-emerald-500',
-  5: 'from-pink-400 to-yellow-400'
-}
+import { MoodEmojis, MoodColors, TAG_CATEGORIES } from '../utils/constants'
 
 // Skeleton Loading Component
 const LoadingSkeleton = () => (
@@ -36,7 +21,7 @@ function EntryList({ entries, isLoading }) {
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 sm:p-8 border border-white/20 shadow-xl">
       <h3 className="text-xl sm:text-2xl font-semibold text-white mb-8">Recent Entries</h3>
-      <div className="space-y-4 max-h-96 overflow-y-auto custom-scrollbar">
+      <div className="space-y-4">
         {isLoading ? (
           <LoadingSkeleton />
         ) : entries.length === 0 ? (
@@ -58,6 +43,27 @@ function EntryList({ entries, isLoading }) {
               <div className={`inline-flex items-center px-3 py-1.5 rounded-full text-white text-sm font-medium bg-gradient-to-r ${MoodColors[entry.mood]}`}>
                 Mood Level {entry.mood}
               </div>
+              
+              {/* Tags Display */}
+              {entry.tags && entry.tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-3">
+                  {entry.tags.map((tag, tagIndex) => {
+                    const tagInfo = TAG_CATEGORIES[tag] || { emoji: '🏷️', color: 'bg-gray-500/80' }
+                    // Make colors slightly more transparent for display
+                    const displayColor = tagInfo.color.replace('/80', '/60')
+                    return (
+                      <span
+                        key={tagIndex}
+                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium text-white ${displayColor} border border-white/20`}
+                      >
+                        <span className="text-xs">{tagInfo.emoji}</span>
+                        {tag}
+                      </span>
+                    )
+                  })}
+                </div>
+              )}
+              
               {entry.note && (
                 <p className="text-white/90 mt-4 leading-relaxed">{entry.note}</p>
               )}

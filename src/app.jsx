@@ -2,10 +2,9 @@ import React from 'react'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
-import { useAuth } from './context/AuthContext'
+import { AuthProvider, useAuth } from './context/AuthContext'
 
-function App() {
-  console.log('🎨 App component rendering...')
+function AppContent() {
   const { user, isAuthenticated, isLoading, authStatus } = useAuth()
   
   console.log('📊 Auth state:', { user: !!user, isAuthenticated, isLoading, authStatus })
@@ -46,6 +45,10 @@ function App() {
       )}
     </div>
   )
+}
+
+function App() {
+  return <AppContent />
 }
 
 export default App
