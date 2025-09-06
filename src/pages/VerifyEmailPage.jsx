@@ -40,7 +40,7 @@ function VerifyEmailPage() {
     }
 
     try {
-      const result = await confirmSignUp({ email, code })
+      const result = await confirmSignUp({ code })
       
       setVerificationSuccess(true)
       setSuccessMessage(result.message)
@@ -68,7 +68,7 @@ function VerifyEmailPage() {
     setResendMessage('')
     
     try {
-      await resendConfirmationCode({ email })
+      await resendConfirmationCode()
       setResendMessage('Verification code sent! Please check your email.')
     } catch (error) {
       console.error('Resend error:', error)
