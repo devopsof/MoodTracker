@@ -165,12 +165,12 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const confirmSignUp = async ({ email, code }) => {
+  const confirmSignUp = async ({ code }) => {
     dispatch({ type: actions.SET_LOADING, payload: true })
     dispatch({ type: actions.CLEAR_ERROR })
     
     try {
-      await cognitoConfirmSignUp({ email, code })
+      await cognitoConfirmSignUp({ username: state.pendingVerificationUsername, code })
       
       // Auto-login after successful verification using stored credentials
       const storedPassword = state.pendingVerificationPassword
@@ -269,9 +269,9 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const resendConfirmationCode = async ({ email }) => {
+  const resendConfirmationCode = async () => {
     try {
-      await cognitoResendConfirmationCode({ email })
+      await cognitoResendConfirmationCode({ username: state.pendingVerificationUsername })
       return {
         success: true,
         message: 'Confirmation code sent!',

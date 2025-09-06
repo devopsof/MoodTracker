@@ -74,10 +74,10 @@ export const signUp = ({ username, email, password }) => {
  * @param {string} code - Verification code from email
  * @returns {Promise<string>} Promise resolving to confirmation result
  */
-export const confirmSignUp = ({ email, code }) => {
+export const confirmSignUp = ({ username, code }) => {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
-      Username: email, // This can be username or email
+      Username: username,
       Pool: userPool,
     })
 
@@ -309,10 +309,10 @@ export const refreshSession = () => {
  * @param {string} email - User's email address
  * @returns {Promise<string>} Promise resolving when code is sent
  */
-export const resendConfirmationCode = ({ email }) => {
+export const resendConfirmationCode = ({ username }) => {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
-      Username: email,
+      Username: username,
       Pool: userPool,
     })
 
