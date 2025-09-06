@@ -136,7 +136,7 @@ function LandingPage() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden bg-transparent">
       
       {/* Floating orbs */}
       <div 
@@ -171,7 +171,7 @@ function LandingPage() {
             </div>
             <button 
               onClick={handleGetStarted}
-              className="px-6 py-3 rounded-2xl bg-white text-purple-700 hover:bg-gray-100 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50"
+              className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl bg-white text-purple-700 hover:bg-gray-100 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm sm:text-base mr-20 sm:mr-0"
               aria-label="Get Started with MoodFlow"
             >
               Get Started

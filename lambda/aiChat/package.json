@@ -1,0 +1,12 @@
+{
+  "name": "moodflow-ai-chat",
+  "version": "1.0.0",
+  "description": "AI chat Lambda function for MoodFlow therapy bot",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"No tests yet\" && exit 0"
+  },
+  "keywords": ["ai", "therapy", "chat", "lambda"],
+  "author": "MoodFlow",
+  "license": "MIT"
+}

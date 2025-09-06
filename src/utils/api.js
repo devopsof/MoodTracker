@@ -1,6 +1,6 @@
 // API utility functions for MoodTracker AWS backend
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://e7a99njzra.execute-api.us-east-1.amazonaws.com/dev'
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://e7a99njzra.execute-api.us-east-1.amazonaws.com/prod'
 
 /**
  * Add a new mood entry via API
@@ -18,6 +18,7 @@ export const createEntry = async (entry, userEmail) => {
       note: entry.note || '',
       tags: entry.tags || [],
       promptId: entry.promptId || null,
+      photos: entry.photos || [], // Include photos in API request
       date: entry.date || new Date().toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric', 
@@ -58,6 +59,7 @@ export const createEntry = async (entry, userEmail) => {
       note: data.entry.note,
       tags: data.entry.tags || [],
       promptId: data.entry.promptId,
+      photos: data.entry.photos || [], // Include photos in response
       date: data.entry.date,
       createdAt: data.entry.createdAt
     }

@@ -29,20 +29,26 @@ const userPool = new CognitoUserPool(poolData)
 
 /**
  * Sign up a new user
+ * @param {string} username - User's chosen username
  * @param {string} email - User's email address
  * @param {string} password - User's password
  * @returns {Promise<Object>} Promise resolving to user data or rejecting with error
  */
-export const signUp = ({ email, password }) => {
+export const signUp = ({ username, email, password }) => {
   return new Promise((resolve, reject) => {
     const attributeList = [
       new CognitoUserAttribute({
         Name: 'email',
         Value: email,
       }),
+      new CognitoUserAttribute({
+        Name: 'preferred_username',
+        Value: username,
+      }),
     ]
 
-    userPool.signUp(email, password, attributeList, null, (err, result) => {
+    // Use username as the Cognito username, email as an attribute
+    userPool.signUp(username, password, attributeList, null, (err, result) => {
       if (err) {
         console.error('SignUp error:', err)
         reject({
@@ -64,14 +70,14 @@ export const signUp = ({ email, password }) => {
 
 /**
  * Confirm user registration with verification code
- * @param {string} email - User's email address
+ * @param {string} email - User's email address or username  
  * @param {string} code - Verification code from email
  * @returns {Promise<string>} Promise resolving to confirmation result
  */
 export const confirmSignUp = ({ email, code }) => {
   return new Promise((resolve, reject) => {
     const cognitoUser = new CognitoUser({
-      Username: email,
+      Username: email, // This can be username or email
       Pool: userPool,
     })
 
@@ -93,19 +99,19 @@ export const confirmSignUp = ({ email, code }) => {
 
 /**
  * Sign in an existing user
- * @param {string} email - User's email address
+ * @param {string} email - User's email address or username
  * @param {string} password - User's password
  * @returns {Promise<Object>} Promise resolving to session data
  */
 export const signIn = ({ email, password }) => {
   return new Promise((resolve, reject) => {
     const authenticationDetails = new AuthenticationDetails({
-      Username: email,
+      Username: email, // This can be username or email
       Password: password,
     })
 
     const cognitoUser = new CognitoUser({
-      Username: email,
+      Username: email, // This can be username or email
       Pool: userPool,
     })
 
@@ -119,7 +125,7 @@ export const signIn = ({ email, password }) => {
         }
 
         const user = {
-          email: email,
+          email: null, // Will be set from attributes
           username: cognitoUser.getUsername(),
           attributes: {},
         }
@@ -130,6 +136,14 @@ export const signIn = ({ email, password }) => {
             attributes.forEach((attribute) => {
               user.attributes[attribute.getName()] = attribute.getValue()
             })
+            // Set email from attributes, or use display name if no email attribute
+            user.email = user.attributes.email || user.username
+            // Set readable username from preferred_username or fallback
+            user.displayUsername = user.attributes.preferred_username || user.username
+          } else {
+            // Fallback if attributes fail
+            user.email = user.username
+            user.displayUsername = user.username
           }
         })
 
@@ -223,9 +237,12 @@ export const getCurrentSession = () => {
           })
           // Use email attribute as the primary email, fallback to username
           user.email = user.attributes.email || cognitoUser.getUsername()
+          // Set readable username from preferred_username or fallback
+          user.displayUsername = user.attributes.preferred_username || user.username.split('@')[0]
         } else {
           // Fallback if attributes fail to load
           user.email = cognitoUser.getUsername()
+          user.displayUsername = user.username.includes('@') ? user.username.split('@')[0] : user.username
         }
 
         // Debug: User authentication data loaded

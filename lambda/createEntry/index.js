@@ -50,20 +50,49 @@ const validateMoodEntry = (data) => {
   // Validate tags if provided
   if (data.tags !== undefined) {
     if (!Array.isArray(data.tags)) {
-      errors.push('Tags must be an array');
+      errors.push('Tags must be an array')
     } else {
       // Check each tag is a string and reasonable length
       data.tags.forEach((tag, index) => {
         if (typeof tag !== 'string') {
-          errors.push(`Tag at index ${index} must be a string`);
+          errors.push(`Tag at index ${index} must be a string`)
         } else if (tag.length > 50) {
-          errors.push(`Tag at index ${index} must be less than 50 characters`);
+          errors.push(`Tag at index ${index} must be less than 50 characters`)
         }
-      });
+      })
       
       // Limit number of tags
       if (data.tags.length > 10) {
-        errors.push('Maximum 10 tags allowed per entry');
+        errors.push('Maximum 10 tags allowed per entry')
+      }
+    }
+  }
+  
+  // Validate photos if provided
+  if (data.photos !== undefined) {
+    if (!Array.isArray(data.photos)) {
+      errors.push('Photos must be an array')
+    } else {
+      // Check each photo object
+      data.photos.forEach((photo, index) => {
+        if (!photo || typeof photo !== 'object') {
+          errors.push(`Photo at index ${index} must be an object`)
+        } else {
+          if (!photo.id || typeof photo.id !== 'string') {
+            errors.push(`Photo at index ${index} must have a valid id`)
+          }
+          if (!photo.url || typeof photo.url !== 'string') {
+            errors.push(`Photo at index ${index} must have a valid url`)
+          }
+          if (photo.fileName && typeof photo.fileName !== 'string') {
+            errors.push(`Photo at index ${index} fileName must be a string`)
+          }
+        }
+      })
+      
+      // Limit number of photos
+      if (data.photos.length > 5) {
+        errors.push('Maximum 5 photos allowed per entry')
       }
     }
   }
@@ -140,6 +169,7 @@ exports.handler = async (event, context) => {
       note: requestBody.note || '',
       tags: requestBody.tags || [],
       promptId: requestBody.promptId || null,
+      photos: requestBody.photos || [], // Add photos support
       createdAt: now.toISOString(),
       date: now.toLocaleDateString('en-US', { 
         month: 'short', 
@@ -147,7 +177,7 @@ exports.handler = async (event, context) => {
         year: 'numeric' 
       }),
       timestamp: now.getTime()
-    };
+    }
 
     // Save to DynamoDB
     const putCommand = new PutCommand({
@@ -174,6 +204,7 @@ exports.handler = async (event, context) => {
           note: moodEntry.note,
           tags: moodEntry.tags,
           promptId: moodEntry.promptId,
+          photos: moodEntry.photos, // Include photos in response
           date: moodEntry.date,
           createdAt: moodEntry.createdAt
         }

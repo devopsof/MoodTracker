@@ -13,12 +13,12 @@ const ThemeToggle = ({ className = "" }) => {
     <button
       onClick={handleClick}
       className={`
-        flex items-center justify-center w-12 h-12 rounded-xl
+        flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium
         bg-theme-glass backdrop-blur-lg hover:bg-theme-glass 
         border border-theme-glass hover:border-theme-glass
         hover:scale-105 active:scale-95
         focus:outline-none focus:ring-2 focus:ring-white/40
-        transition-all duration-500 shadow-lg hover:shadow-xl
+        transition-all duration-300 shadow-lg hover:shadow-xl
         text-theme-primary cursor-pointer
         ${isTransitioning ? 'animate-pulse' : ''}
         ${className}
@@ -26,22 +26,16 @@ const ThemeToggle = ({ className = "" }) => {
       style={{
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
-        // Fast, visible theme-aware styling
-        backgroundColor: isDark ? 'rgba(139, 92, 246, 0.5)' : 'rgba(255, 255, 255, 0.15)',
-        borderColor: isDark ? 'rgba(139, 92, 246, 0.8)' : 'rgba(255, 255, 255, 0.3)',
-        transition: 'all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1)',
-        transform: isTransitioning ? 'scale(1.05) rotate(10deg)' : 'scale(1) rotate(0deg)'
+        backgroundColor: isDark ? 'rgba(139, 92, 246, 0.4)' : 'rgba(255, 255, 255, 0.2)',
+        borderColor: isDark ? 'rgba(139, 92, 246, 0.6)' : 'rgba(255, 255, 255, 0.4)',
+        transition: 'all 0.3s ease'
       }}
     >
-      <span 
-        className="text-xl transition-all duration-700 hover:scale-110"
-        style={{
-          transform: isTransitioning ? 'rotate(360deg) scale(1.2)' : 'rotate(0deg) scale(1)',
-          opacity: isTransitioning ? 0.5 : 1,
-          filter: isTransitioning ? 'blur(1px)' : 'blur(0px)'
-        }}
-      >
+      <span className="text-sm">
         {isDark ? '🌙' : '☀️'}
+      </span>
+      <span className="hidden sm:inline">
+        {isDark ? 'Dark' : 'Light'}
       </span>
     </button>
   )

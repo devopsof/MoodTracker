@@ -2,21 +2,21 @@ import React, { useState, useEffect } from 'react'
 import { loadEntries } from '../utils/api'
 import { MoodEmojis } from '../utils/constants'
 
-// Color intensity mapping for moods
+// Color intensity mapping for moods - High contrast for visibility
 const MOOD_COLORS = {
-  1: 'bg-red-200 border-red-300',      // Very sad - light red
-  2: 'bg-orange-200 border-orange-300', // Sad - light orange  
-  3: 'bg-gray-200 border-gray-300',     // Neutral - light gray
-  4: 'bg-green-200 border-green-300',   // Happy - light green
-  5: 'bg-emerald-300 border-emerald-400' // Very happy - bright green
+  1: 'bg-red-500 border-red-600 text-white',      // Very sad - strong red
+  2: 'bg-orange-500 border-orange-600 text-white', // Sad - strong orange  
+  3: 'bg-gray-500 border-gray-600 text-white',     // Neutral - strong gray
+  4: 'bg-blue-500 border-blue-600 text-white',     // Happy - strong blue
+  5: 'bg-green-500 border-green-600 text-white'    // Very happy - strong green
 }
 
 const MOOD_COLORS_HOVER = {
-  1: 'hover:bg-red-300',
-  2: 'hover:bg-orange-300', 
-  3: 'hover:bg-gray-300',
-  4: 'hover:bg-green-300',
-  5: 'hover:bg-emerald-400'
+  1: 'hover:bg-red-600',
+  2: 'hover:bg-orange-600', 
+  3: 'hover:bg-gray-600',
+  4: 'hover:bg-blue-600',
+  5: 'hover:bg-green-600'
 }
 
 function CalendarHeatmap({ userEmail }) {
@@ -215,9 +215,9 @@ function CalendarHeatmap({ userEmail }) {
 
   return (
     <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-6 border border-white/20 shadow-xl overflow-hidden max-w-full">
-      <div className="flex gap-6 h-[580px] min-w-0 w-full">
+      <div className="flex flex-col lg:flex-row gap-6 min-h-[580px] min-w-0 w-full">
         {/* Left Side - Calendar */}
-        <div className="flex-shrink-0 w-[420px] calendar-container">
+        <div className="flex-shrink-0 w-full sm:w-[420px] calendar-container">
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-4">
             <button
@@ -240,7 +240,7 @@ function CalendarHeatmap({ userEmail }) {
           </div>
 
           {/* Week Days Header */}
-          <div className="grid grid-cols-7 gap-1.5 mb-3">
+          <div className="grid grid-cols-7 gap-1 sm:gap-1.5 mb-3">
             {weekDays.map(day => (
               <div key={day} className="text-center text-white/70 text-sm font-medium py-2">
                 {day}
@@ -249,7 +249,7 @@ function CalendarHeatmap({ userEmail }) {
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-1.5">
+          <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
             {calendarDays.map((date, index) => {
               const moodData = getMoodForDate(date)
               const isCurrentMonthDay = isCurrentMonth(date)
@@ -259,12 +259,12 @@ function CalendarHeatmap({ userEmail }) {
                 <div
                   key={index}
                   className={`
-                    relative w-12 h-12 rounded-lg border transition-all duration-300 cursor-pointer
+                    relative w-11 h-11 sm:w-12 sm:h-12 rounded-lg border transition-all duration-300 cursor-pointer flex items-center justify-center
                     ${isCurrentMonthDay ? 'opacity-100' : 'opacity-40'}
                     ${isTodayDate ? 'ring-2 ring-white/50' : ''}
                     ${moodData 
                       ? `${MOOD_COLORS[moodData.mood]} ${MOOD_COLORS_HOVER[moodData.mood]}` 
-                      : 'bg-white/10 border-white/20 hover:bg-white/20'
+                      : 'bg-white/20 border-white/30 hover:bg-white/30 text-white'
                     }
                   `}
                   onClick={() => {
@@ -274,13 +274,11 @@ function CalendarHeatmap({ userEmail }) {
                   }}
                 >
                   {/* Day Number */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className={`text-sm font-medium ${
-                      moodData ? 'text-gray-700' : 'text-white/90'
-                    }`}>
-                      {date.getDate()}
-                    </span>
-                  </div>
+                  <span className={`text-sm font-bold z-10 ${
+                    moodData ? 'text-white' : 'text-white/90'
+                  }`}>
+                    {date.getDate()}
+                  </span>
 
                   {/* Mood Emoji (if there's mood data) */}
                   {moodData && (
@@ -291,7 +289,7 @@ function CalendarHeatmap({ userEmail }) {
 
                   {/* Multiple entries indicator */}
                   {moodData && moodData.count > 1 && (
-                    <div className="absolute bottom-0.5 right-0.5 bg-white/80 text-gray-700 text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                    <div className="absolute bottom-0.5 right-0.5 bg-white text-black text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-sm">
                       {moodData.count}
                     </div>
                   )}

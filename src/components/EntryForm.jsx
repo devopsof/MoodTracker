@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { MoodEmojis, QuickMoodEmojis, IntensityLabels, TAG_CATEGORIES } from '../utils/constants'
 import PromptSelector from './PromptSelector'
 import AISuggestion from './AISuggestion'
+import PhotoUpload from './PhotoUpload'
 import { analyzeSentiment } from '../utils/api'
 import { useAuth } from '../context/AuthContext'
 
@@ -16,6 +17,9 @@ function EntryForm({ onAddEntry }) {
   const [showPromptSelector, setShowPromptSelector] = useState(false)
   const [selectedPrompt, setSelectedPrompt] = useState(null)
   
+  // Photo upload state
+  const [photos, setPhotos] = useState([])
+  
   // AI Sentiment Analysis state
   const [aiAnalysis, setAiAnalysis] = useState(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -29,7 +33,8 @@ function EntryForm({ onAddEntry }) {
         intensity,
         note, 
         tags: selectedTags,
-        promptId: selectedPrompt?.id || null
+        promptId: selectedPrompt?.id || null,
+        photos: photos // Include photos in the entry data
       })
     }
     setNote('')
@@ -39,6 +44,7 @@ function EntryForm({ onAddEntry }) {
     setCustomTag('')
     setQuickMoodMode(false)
     setSelectedPrompt(null)
+    setPhotos([])
   }
 
   const handleTagToggle = (tagName) => {
@@ -81,6 +87,7 @@ function EntryForm({ onAddEntry }) {
     setSelectedTags([])
     setCustomTag('')
     setQuickMoodMode(false)
+    setPhotos([])
   }
 
   const handlePromptSelect = (prompt) => {
@@ -104,7 +111,15 @@ function EntryForm({ onAddEntry }) {
     
     try {
       console.log('🤖 Starting AI analysis...')
-      const response = await analyzeSentiment(note, user.email)
+      
+      // Enhance the text with photo context if photos are present
+      let analysisText = note
+      if (photos.length > 0) {
+        const photoContext = `\n\n[User has attached ${photos.length} photo${photos.length > 1 ? 's' : ''} to this mood entry, which may provide additional emotional context.]`
+        analysisText = note + photoContext
+      }
+      
+      const response = await analyzeSentiment(analysisText, user.email)
       
       if (response.success && response.analysis) {
         setAiAnalysis(response.analysis)
@@ -142,23 +157,32 @@ function EntryForm({ onAddEntry }) {
     setAiAnalysis(null)
   }
 
+  // Photo upload handlers
+  const handlePhotoAdd = (photoData) => {
+    setPhotos(prev => [...prev, photoData])
+  }
+
+  const handlePhotoRemove = (photoId) => {
+    setPhotos(prev => prev.filter(photo => photo.id !== photoId))
+  }
+
   return (
     <>
-    <form onSubmit={handleSubmit} className="bg-theme-glass rounded-3xl p-6 sm:p-8 border border-theme-glass shadow-xl">
-      <div className="flex justify-between items-center mb-8">
-        <h3 className="text-xl sm:text-2xl font-semibold text-theme-primary">Add Today's Mood</h3>
-        <div className="flex gap-3">
+    <form onSubmit={handleSubmit} className="bg-theme-glass rounded-3xl p-4 sm:p-8 border border-theme-glass shadow-xl mx-2 sm:mx-0">
+      <div className="flex justify-between items-center mb-6 sm:mb-8">
+        <h3 className="text-lg sm:text-2xl font-semibold text-theme-primary">Add Today's Mood</h3>
+        <div className="flex gap-2 sm:gap-3">
           <button
             type="button"
             onClick={() => setShowPromptSelector(true)}
-            className="px-4 py-2 rounded-xl bg-theme-glass text-theme-primary hover:bg-theme-glass border border-theme-glass hover:border-theme-glass transition-all duration-300 text-sm font-medium"
+            className="px-3 py-2 sm:px-4 sm:py-2 rounded-xl bg-theme-glass text-theme-primary hover:bg-theme-glass border border-theme-glass hover:border-theme-glass transition-all duration-300 text-xs sm:text-sm font-medium"
           >
             💭 Writing Prompts
           </button>
           <button
             type="button"
             onClick={() => setQuickMoodMode(!quickMoodMode)}
-            className="px-4 py-2 rounded-xl bg-white/20 text-white hover:bg-white/30 transition-all duration-300 text-sm font-medium"
+            className="px-3 py-2 sm:px-4 sm:py-2 rounded-xl bg-white/20 text-white hover:bg-white/30 transition-all duration-300 text-xs sm:text-sm font-medium"
           >
             ⚡ Quick Check-in
           </button>
@@ -290,9 +314,9 @@ function EntryForm({ onAddEntry }) {
               />
               <span className="text-white/60 text-sm">10</span>
             </div>
-            <div className="flex justify-between max-w-lg mx-auto mt-4">
+            <div className="grid grid-cols-5 gap-2 sm:gap-3 max-w-lg mx-auto mt-6">
               {[1, 3, 5, 7, 10].map(num => (
-                <div key={num} className="flex flex-col items-center">
+                <div key={num} className="flex flex-col items-center space-y-2">
                   <span 
                     className={`text-xs font-bold transition-all duration-300 ${
                       intensity === num ? 'text-amber-300 scale-110' : 'text-white/40'
@@ -301,9 +325,13 @@ function EntryForm({ onAddEntry }) {
                     {num}
                   </span>
                   <span 
-                    className={`text-xs transition-all duration-300 ${
+                    className={`text-xs transition-all duration-300 text-center leading-tight px-1 whitespace-pre-line ${
                       intensity === num ? 'text-amber-200' : 'text-white/30'
                     }`}
+                    style={{ 
+                      minHeight: '2.5rem',
+                      maxWidth: '100%'
+                    }}
                   >
                     {IntensityLabels[num]}
                   </span>
@@ -441,6 +469,21 @@ function EntryForm({ onAddEntry }) {
               </div>
             </div>
           )}
+        </div>
+        )}
+        
+        {/* Photo Upload Section - Only show when not in quick mood mode */}
+        {!quickMoodMode && (
+        <div>
+          <label className="block text-white/90 text-base font-medium mb-4">
+            Add photos (optional) 📷
+          </label>
+          <PhotoUpload 
+            photos={photos}
+            onPhotoAdd={handlePhotoAdd}
+            onPhotoRemove={handlePhotoRemove}
+            maxPhotos={3}
+          />
         </div>
         )}
         

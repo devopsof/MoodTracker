@@ -29,28 +29,34 @@ function LogoutRoute() {
   }, [])
   
   return (
-    <div className="font-sans relative min-h-screen">
+    <div className="font-sans relative min-h-screen w-full">
       {/* Animated Background Layers */}
-      <div 
-        className="fixed inset-0 -z-10"
-        style={{
-          background: 'linear-gradient(-45deg, #dc6b47, #d1375e, #1f8bb8, #1fb894, #5a73d9, #6a4291)',
-          backgroundSize: '400% 400%',
-          animation: 'gradientMove 15s ease infinite',
-          opacity: isDark ? 0 : 1,
-          transition: 'opacity 1.5s ease-in-out'
-        }}
-      />
-      <div 
-        className="fixed inset-0 -z-10"
-        style={{
-          background: 'linear-gradient(-45deg, #0a0a1a, #101020, #0e1428, #0c1f35, #1a1a35, #2d1f4f)',
-          backgroundSize: '400% 400%',
-          animation: 'gradientMove 15s ease infinite',
-          opacity: isDark ? 1 : 0,
-          transition: 'opacity 1.5s ease-in-out'
-        }}
-      />
+        <div 
+          className="fixed inset-0 -z-10"
+          style={{
+            background: 'linear-gradient(-45deg, #dc6b47, #d1375e, #1f8bb8, #1fb894, #5a73d9, #6a4291)',
+            backgroundSize: '400% 400%',
+            animation: 'gradientMove 25s ease infinite',
+            opacity: isDark ? 0 : 1,
+            transition: 'opacity 1s ease-in-out',
+            minHeight: '120vh',
+            top: '-10vh',
+            bottom: '-10vh'
+          }}
+        />
+        <div 
+          className="fixed inset-0 -z-10"
+          style={{
+            background: 'linear-gradient(-45deg, #0a0a1a, #101020, #0e1428, #0c1f35, #1a1a35, #2d1f4f)',
+            backgroundSize: '400% 400%',
+            animation: 'gradientMove 25s ease infinite',
+            opacity: isDark ? 1 : 0,
+            transition: 'opacity 1s ease-in-out',
+            minHeight: '120vh',
+            top: '-10vh',
+            bottom: '-10vh'
+          }}
+        />
       
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center text-white">
@@ -70,16 +76,19 @@ function ProtectedRoute({ children }) {
   
   if (isLoading) {
     return (
-      <div className="font-sans relative min-h-screen">
+      <div className="font-sans relative min-h-screen w-full">
         {/* Animated Background Layers */}
         <div 
           className="fixed inset-0 -z-10"
           style={{
             background: 'linear-gradient(-45deg, #dc6b47, #d1375e, #1f8bb8, #1fb894, #5a73d9, #6a4291)',
             backgroundSize: '400% 400%',
-            animation: 'gradientMove 15s ease infinite',
+            animation: 'gradientMove 25s ease infinite',
             opacity: isDark ? 0 : 1,
-            transition: 'opacity 1.5s ease-in-out'
+            transition: 'opacity 1s ease-in-out',
+            minHeight: '120vh',
+            top: '-10vh',
+            bottom: '-10vh'
           }}
         />
         <div 
@@ -87,9 +96,12 @@ function ProtectedRoute({ children }) {
           style={{
             background: 'linear-gradient(-45deg, #0a0a1a, #101020, #0e1428, #0c1f35, #1a1a35, #2d1f4f)',
             backgroundSize: '400% 400%',
-            animation: 'gradientMove 15s ease infinite',
+            animation: 'gradientMove 25s ease infinite',
             opacity: isDark ? 1 : 0,
-            transition: 'opacity 1.5s ease-in-out'
+            transition: 'opacity 1s ease-in-out',
+            minHeight: '120vh',
+            top: '-10vh',
+            bottom: '-10vh'
           }}
         />
         
@@ -111,11 +123,6 @@ function AppContent() {
   const { user, isAuthenticated, isLoading, authStatus } = useAuth()
   const { isLoaded, isDark } = useTheme()
   
-  // Remove theme loading delay to prevent flashing
-  // if (!isLoaded) {
-  //   return loading screen
-  // }
-  
   console.log('📊 Auth state:', { user: !!user, isAuthenticated, isLoading, authStatus })
   console.log('🔍 Current URL:', window.location.pathname)
 
@@ -123,16 +130,19 @@ function AppContent() {
   if (isLoading) {
     console.log('⏳ Showing loading screen...')
     return (
-      <div className="font-sans relative min-h-screen">
+      <div className="font-sans relative min-h-screen w-full">
         {/* Animated Background Layers - Show during loading too */}
         <div 
           className="fixed inset-0 -z-10"
           style={{
             background: 'linear-gradient(-45deg, #dc6b47, #d1375e, #1f8bb8, #1fb894, #5a73d9, #6a4291)',
             backgroundSize: '400% 400%',
-            animation: 'gradientMove 15s ease infinite',
+            animation: 'gradientMove 20s ease infinite',
             opacity: isDark ? 0 : 1,
-            transition: 'opacity 1.5s ease-in-out'
+            transition: 'opacity 1.5s ease-in-out',
+            minHeight: '120vh',
+            top: '-10vh',
+            bottom: '-10vh'
           }}
         />
         <div 
@@ -140,9 +150,12 @@ function AppContent() {
           style={{
             background: 'linear-gradient(-45deg, #0a0a1a, #101020, #0e1428, #0c1f35, #1a1a35, #2d1f4f)',
             backgroundSize: '400% 400%',
-            animation: 'gradientMove 15s ease infinite',
+            animation: 'gradientMove 20s ease infinite',
             opacity: isDark ? 1 : 0,
-            transition: 'opacity 1.5s ease-in-out'
+            transition: 'opacity 1.5s ease-in-out',
+            minHeight: '120vh',
+            top: '-10vh',
+            bottom: '-10vh'
           }}
         />
         
@@ -157,23 +170,21 @@ function AppContent() {
     )
   }
 
-  // Show verification page if user needs to confirm email
-  if (authStatus === 'needsConfirmation') {
-    return <VerifyEmailPage />
-  }
-
   return (
     <Router>
-      <div className="font-sans relative min-h-screen">
+      <div className="font-sans relative min-h-screen w-full">
         {/* Animated Background Layers */}
         <div 
           className="fixed inset-0 -z-10"
           style={{
             background: 'linear-gradient(-45deg, #dc6b47, #d1375e, #1f8bb8, #1fb894, #5a73d9, #6a4291)',
             backgroundSize: '400% 400%',
-            animation: 'gradientMove 15s ease infinite',
+            animation: 'gradientMove 25s ease infinite',
             opacity: isDark ? 0 : 1,
-            transition: 'opacity 1.5s ease-in-out'
+            transition: 'opacity 1s ease-in-out',
+            minHeight: '120vh',
+            top: '-10vh',
+            bottom: '-10vh'
           }}
         />
         <div 
@@ -181,13 +192,16 @@ function AppContent() {
           style={{
             background: 'linear-gradient(-45deg, #0a0a1a, #101020, #0e1428, #0c1f35, #1a1a35, #2d1f4f)',
             backgroundSize: '400% 400%',
-            animation: 'gradientMove 15s ease infinite',
+            animation: 'gradientMove 25s ease infinite',
             opacity: isDark ? 1 : 0,
-            transition: 'opacity 1.5s ease-in-out'
+            transition: 'opacity 1s ease-in-out',
+            minHeight: '120vh',
+            top: '-10vh',
+            bottom: '-10vh'
           }}
         />
         
-        {/* Theme Toggle Button - Fixed Position */}
+        {/* Theme Toggle Button - Fixed Position - Top right, stays fixed during scroll */}
         <ThemeToggle className="fixed top-4 right-4 z-50" />
         
         <AnimatePresence mode="wait">
@@ -207,12 +221,33 @@ function AppContent() {
               } 
             />
             
+            {/* Verification page - for users who need to confirm email */}
+            <Route 
+              path="/verify" 
+              element={
+                authStatus === 'needsConfirmation' ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <VerifyEmailPage />
+                  </motion.div>
+                ) : (
+                  <Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />
+                )
+              } 
+            />
+            
             {/* Login/Signup page - redirect authenticated users to dashboard */}
             <Route 
               path="/login" 
               element={
                 isAuthenticated ? (
                   <Navigate to="/dashboard" replace />
+                ) : authStatus === 'needsConfirmation' ? (
+                  <Navigate to="/verify" replace />
                 ) : (
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}

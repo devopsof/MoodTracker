@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 function LoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [username, setUsername] = useState('')
   // Load form mode from localStorage to persist across re-renders
   const [isSignUp, setIsSignUp] = useState(() => {
     try {
@@ -35,10 +36,16 @@ function LoginForm() {
     if (!email || !password) {
       return
     }
+    
+    // Validate username for signup
+    if (isSignUp && (!username || username.length < 3 || username.length > 20)) {
+      return
+    }
 
     console.log('📧 Form submission:', { 
       isSignUp, 
       email, 
+      username: isSignUp ? username : 'N/A',
       passwordLength: password.length,
       action: isSignUp ? 'SIGN_UP' : 'SIGN_IN'
     })
@@ -46,7 +53,7 @@ function LoginForm() {
     try {
       if (isSignUp) {
         console.log('✨ Attempting sign up...')
-        const result = await signUp({ email, password })
+        const result = await signUp({ username, email, password })
         console.log('✅ Sign up successful:', result)
         setSuccessMessage(result.message)
         setShowSuccess(true)
@@ -93,20 +100,40 @@ function LoginForm() {
     // Clear form when switching modes
     setEmail('')
     setPassword('')
+    setUsername('')
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {isSignUp && (
+        <div>
+          <label className="block text-theme-secondary text-sm font-medium mb-3">
+            Username
+          </label>
+          <input 
+            type="text" 
+            value={username} 
+            onChange={(e) => { setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, '')); handleInputChange(); }}
+            className="w-full px-4 py-4 rounded-2xl bg-theme-glass border border-theme-glass text-theme-primary placeholder-theme-tertiary focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all duration-300"
+            placeholder="your_username" 
+            minLength={3}
+            maxLength={20}
+            pattern="[a-zA-Z0-9_]+"
+            required={isSignUp}
+          />
+          <p className="text-theme-tertiary text-xs mt-1">3-20 characters, letters, numbers, and underscores only</p>
+        </div>
+      )}
       <div>
         <label className="block text-theme-secondary text-sm font-medium mb-3">
-          Email
+          {isSignUp ? 'Email' : 'Email or Username'}
         </label>
         <input 
-          type="email" 
+          type={isSignUp ? "email" : "text"} 
           value={email} 
           onChange={(e) => { setEmail(e.target.value); handleInputChange(); }}
           className="w-full px-4 py-4 rounded-2xl bg-theme-glass border border-theme-glass text-theme-primary placeholder-theme-tertiary focus:outline-none focus:ring-2 focus:ring-white/40 focus:border-transparent transition-all duration-300"
-          placeholder="you@example.com" 
+          placeholder={isSignUp ? "you@example.com" : "email or username"} 
           required 
         />
       </div>
@@ -145,7 +172,7 @@ function LoginForm() {
 
       <button 
         type="submit" 
-        disabled={isLoading || !email || !password}
+        disabled={isLoading || !email || !password || (isSignUp && (!username || username.length < 3))}
         className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-white to-gray-100 text-purple-700 font-semibold hover:from-gray-100 hover:to-white transform hover:scale-[1.02] transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
       >
         {isLoading ? (isSignUp ? 'Creating Account...' : 'Signing In...') : (isSignUp ? 'Create Account' : 'Sign In')}

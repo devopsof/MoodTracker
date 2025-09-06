@@ -1,19 +1,23 @@
 import React, { useState, useEffect } from 'react'
 import EntryForm from '../components/EntryForm'
 import EntryList from '../components/EntryList'
-import Analytics from '../components/Analytics'
 import CalendarHeatmap from '../components/CalendarHeatmap'
+import Analytics from '../components/Analytics'
+import AITherapist from '../components/AITherapist'
+import Greeting from '../components/Greeting'
 import { loadEntries, addEntry } from '../utils/api'
+import { processAndUploadPhotos, deletePhotoFromS3 } from '../utils/s3PhotoApi'
+import { storeMultiplePhotos } from '../utils/photoStorage'
+import { loadEntriesFromLocal, addEntryToLocal, updateEntryInLocal, mergeEntries, cleanupDuplicateEntries } from '../utils/localStorageApi'
 import { useAuth } from '../context/AuthContext'
 
 function DashboardPage({ user }) {
   const { signOut } = useAuth()
   const [entries, setEntries] = useState([])
-  const [showSuccess, setShowSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('entries')
-
-  // Load entries from API when component mounts or user changes
+  const [showSuccess, setShowSuccess] = useState(false)
+  // Load entries from both API and localStorage when component mounts or user changes
   useEffect(() => {
     const loadUserEntries = async () => {
       // Clear entries immediately when user changes
@@ -22,11 +26,21 @@ function DashboardPage({ user }) {
       
       if (user && user.email) {
         try {
-          const savedEntries = await loadEntries(user.email)
-          setEntries(savedEntries)
+          // Clean up duplicates first
+          const duplicatesRemoved = cleanupDuplicateEntries(user.email)
+          if (duplicatesRemoved > 0) {
+            console.log('🧽 Cleaned up', duplicatesRemoved, 'duplicate entries')
+          }
+          
+          // TEMPORARY: Load from localStorage only to prevent duplicates
+          // TODO: Re-enable API sync once duplicate issue is resolved
+          const localEntries = loadEntriesFromLocal(user.email)
+          console.log('📊 Loading from localStorage only:', localEntries.length, 'entries')
+          console.log('🚫 API sync temporarily disabled to prevent duplicates')
+          
+          setEntries(localEntries)
         } catch (error) {
           console.error('❌ Failed to load entries:', error)
-          // Set empty array on error so UI doesn't break
           setEntries([])
         }
       }
@@ -34,42 +48,123 @@ function DashboardPage({ user }) {
     }
     
     loadUserEntries()
+    
+    // Expose cleanup function globally for manual testing
+    if (user?.email && typeof window !== 'undefined') {
+      window.cleanupDuplicates = () => {
+        const removed = cleanupDuplicateEntries(user.email)
+        console.log('🧽 Manual cleanup completed. Removed', removed, 'duplicates')
+        loadUserEntries() // Reload entries
+        return removed
+      }
+      
+      // Add manual refresh function for debugging
+      window.refreshEntries = loadUserEntries
+    }
   }, [user?.email])
+
+  const handleEntryUpdate = async (updatedEntry) => {
+    try {
+      // Update the entry in the local state
+      setEntries(prevEntries => 
+        prevEntries.map(entry => 
+          entry.id === updatedEntry.id ? updatedEntry : entry
+        )
+      )
+      
+      // Save updated entry to localStorage
+      if (user && user.email) {
+        updateEntryInLocal(user.email, updatedEntry)
+        console.log('📝 Entry updated in localStorage:', updatedEntry.id)
+      }
+    } catch (error) {
+      console.error('Failed to update entry:', error)
+      alert('Failed to update entry. Please try again.')
+    }
+  }
 
   const handleAddEntry = async (newEntry) => {
     const now = new Date()
+    
+    // Handle photo storage if photos are included
+    let storedPhotos = []
+    if (newEntry.photos && newEntry.photos.length > 0) {
+      console.log('📷 Processing photos for entry:', newEntry.photos.length, 'photos')
+      console.log('📅 Photo data structure:', newEntry.photos.map(p => ({
+        id: p.id,
+        fileName: p.fileName,
+        fileSize: p.fileSize,
+        hasFile: !!p.file,
+        hasDataUrl: !!p.dataUrl,
+        fileType: p.fileType
+      })))
+      
+      try {
+        console.log('🚀 Starting S3 upload process...')
+        // Upload photos to S3 with compression
+        storedPhotos = await processAndUploadPhotos(newEntry.photos, user.email)
+        console.log('🏢 Uploaded photos to S3:', storedPhotos.length)
+        console.log('🖼️ S3 photo URLs:', storedPhotos.map(p => p.url))
+        
+        // If S3 upload succeeded but returned no photos, try localStorage fallback
+        if (storedPhotos.length === 0) {
+          console.warn('⚠️ S3 upload returned 0 photos, trying localStorage fallback')
+          storedPhotos = await storeMultiplePhotos(newEntry.photos)
+          console.log('💾 Fallback: stored photos locally:', storedPhotos.length)
+        }
+      } catch (error) {
+        console.error('❌ Error uploading photos to S3:', error)
+        console.error('🗏 Stack trace:', error.stack)
+        
+        // Fallback to localStorage if S3 fails
+        try {
+          console.log('💾 Attempting localStorage fallback...')
+          storedPhotos = await storeMultiplePhotos(newEntry.photos)
+          console.log('💾 Fallback: stored photos locally after S3 error:', storedPhotos.length)
+        } catch (fallbackError) {
+          console.error('❌ Fallback storage also failed:', fallbackError)
+          alert('Failed to store photos. Entry will be saved without photos. You can edit the entry later to add photos.')
+        }
+      }
+    }
+    
     const entry = {
-      id: Date.now(), // Temporary ID for UI, API will provide real ID
+      id: Date.now(), // Use timestamp as unique ID
       date: now.toLocaleDateString('en-US', { 
         month: 'short', 
         day: 'numeric', 
         year: 'numeric' 
       }),
-      createdAt: now.toISOString(), // Add proper timestamp for sorting
-      timestamp: now.toISOString(), // Backup timestamp field
-      ...newEntry
+      createdAt: now.toISOString(),
+      timestamp: now.toISOString(),
+      ...newEntry,
+      photos: storedPhotos
     }
     
-    // Update state immediately for UI responsiveness
-    const updatedEntries = [entry, ...entries]
-    setEntries(updatedEntries)
+    console.log('💾 Creating entry with ID:', entry.id)
     
     try {
-      // Save to API
       if (user && user.email) {
-        await addEntry(user.email, entry)
-        // Reload entries from API to get the real data
-        const apiEntries = await loadEntries(user.email)
-        setEntries(apiEntries)
+        // Save to localStorage (primary storage for photos and offline support)
+        addEntryToLocal(user.email, entry)
+        console.log('💾 Entry saved to localStorage with photos')
+        
+        // DISABLED API sync temporarily to prevent duplicates
+        // TODO: Re-enable once duplicate issue is fully resolved
+        console.log('🚫 API sync disabled to prevent duplicates - data is safe in localStorage')
+        
+        // Update UI state directly instead of reloading
+        // This prevents the double entry issue by avoiding the merge process
+        const updatedEntries = [entry, ...entries]
+        setEntries(updatedEntries)
+        
+        console.log('✅ Entry added to UI state, total entries:', updatedEntries.length)
       }
       
       setShowSuccess(true)
       setTimeout(() => setShowSuccess(false), 3000)
     } catch (error) {
-      console.error('Failed to save entry to API:', error)
-      // Revert optimistic update on error
-      setEntries(entries)
-      // TODO: Show error message to user
+      console.error('❌ Failed to save entry:', error)
       alert('Failed to save entry. Please try again.')
     }
   }
@@ -112,20 +207,21 @@ function DashboardPage({ user }) {
           </div>
         </div>
       </nav>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto px-2 sm:px-6 py-6 sm:py-12">
         <div className="mb-12 text-center sm:text-left">
-          <h2 className="text-3xl sm:text-4xl font-bold text-theme-primary mb-3">
-            Hello, {user.email.split('@')[0]} 👋
-          </h2>
-          <p className="text-theme-secondary text-lg sm:text-xl">How are you feeling today?</p>
+          <Greeting 
+            username={user.displayUsername || user.username || user.email.split('@')[0]} 
+            recentMoods={entries.slice(0, 5)} 
+            rotationInterval={30} 
+          />
         </div>
         
         {/* Tab Navigation */}
-        <div className="mb-8">
+        <div className="mb-6 sm:mb-8 mx-2 sm:mx-0">
           <div className="flex space-x-1 bg-theme-glass rounded-2xl p-1">
             <button
               onClick={() => setActiveTab('entries')}
-              className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              className={`flex-1 px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-300 text-xs sm:text-base ${
                 activeTab === 'entries'
                   ? 'bg-white text-purple-700 shadow-lg'
                   : 'text-theme-primary hover:bg-theme-glass'
@@ -135,7 +231,7 @@ function DashboardPage({ user }) {
             </button>
             <button
               onClick={() => setActiveTab('calendar')}
-              className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              className={`flex-1 px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-300 text-xs sm:text-base ${
                 activeTab === 'calendar'
                   ? 'bg-white text-purple-700 shadow-lg'
                   : 'text-theme-primary hover:bg-theme-glass'
@@ -145,13 +241,23 @@ function DashboardPage({ user }) {
             </button>
             <button
               onClick={() => setActiveTab('analytics')}
-              className={`flex-1 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              className={`flex-1 px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-300 text-xs sm:text-base ${
                 activeTab === 'analytics'
                   ? 'bg-white text-purple-700 shadow-lg'
                   : 'text-theme-primary hover:bg-theme-glass'
               }`}
             >
-              📊 Analytics
+              📆 Analytics
+            </button>
+            <button
+              onClick={() => setActiveTab('therapy')}
+              className={`flex-1 px-3 sm:px-6 py-2 sm:py-3 rounded-xl font-medium transition-all duration-300 text-xs sm:text-base ${
+                activeTab === 'therapy'
+                  ? 'bg-white text-purple-700 shadow-lg'
+                  : 'text-theme-primary hover:bg-theme-glass'
+              }`}
+            >
+              🤖 AI Chat
             </button>
           </div>
         </div>
@@ -166,11 +272,11 @@ function DashboardPage({ user }) {
         )}
         
         {/* Tab Content */}
-        <div style={{ minHeight: '600px' }} className="overflow-hidden">
+        <div style={{ minHeight: '600px' }} className="overflow-hidden px-2 sm:px-0">
           {activeTab === 'entries' && (
-            <div className="grid lg:grid-cols-2 gap-8">
+            <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 lg:gap-8">
               <EntryForm onAddEntry={handleAddEntry} />
-              <EntryList entries={entries} isLoading={isLoading} />
+              <EntryList entries={entries} isLoading={isLoading} onEntryUpdate={handleEntryUpdate} />
             </div>
           )}
           {activeTab === 'calendar' && (
@@ -178,6 +284,11 @@ function DashboardPage({ user }) {
           )}
           {activeTab === 'analytics' && (
             <Analytics userEmail={user.email} />
+          )}
+          {activeTab === 'therapy' && (
+            <div style={{ height: '70vh', minHeight: '500px' }}>
+              <AITherapist />
+            </div>
           )}
         </div>
       </div>

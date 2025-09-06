@@ -21,16 +21,16 @@ export const QuickMoodEmojis = [
 
 // Intensity labels for the 1-10 scale
 export const IntensityLabels = {
-    1: 'Very Weak',
+    1: 'Very\nWeak',
     2: 'Weak', 
     3: 'Light',
     4: 'Mild',
     5: 'Moderate',
     6: 'Strong',
-    7: 'Very Strong',
+    7: 'Very\nStrong',
     8: 'Intense',
     9: 'Extreme',
-    10: 'Overwhelming'
+    10: 'Over-\nwhelming'
 }
 
 export const MoodColors = {

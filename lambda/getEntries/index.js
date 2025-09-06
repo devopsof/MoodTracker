@@ -108,11 +108,12 @@ const formatEntries = (items) => {
     note: item.note || '',
     tags: item.tags || [],
     promptId: item.promptId || null,
+    photos: item.photos || [], // Include photos in formatted entries
     date: item.date,
     createdAt: item.createdAt,
     timestamp: item.timestamp
-  }));
-};
+  }))
+}
 
 /**
  * Lambda handler for retrieving mood entries

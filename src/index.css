@@ -73,6 +73,11 @@ html {
 
 html {
   overflow-x: hidden;
+  /* Prevent white overscroll on mobile */
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  height: 100%;
 }
 
 body {
@@ -82,6 +87,11 @@ body {
   width: 100%;
   overflow-x: hidden;
   position: relative;
+  /* Prevent white overscroll on mobile */
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Completely hide scrollbars */
@@ -110,13 +120,17 @@ body {
 #root {
   min-height: 100vh;
   width: 100%;
+  /* Prevent white overscroll on mobile */
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  overscroll-behavior-x: none;
 }
 
-/* Smooth theme transitions - exclude body to preserve animations */
+/* Smooth theme transitions - optimized for mobile performance */
 *:not(body):not(body::before):not(body::after) {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
-  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  transition-duration: 1500ms;
+  transition-property: background-color, border-color, color, opacity;
+  transition-timing-function: ease-out;
+  transition-duration: 800ms;
 }
 
 
@@ -124,19 +138,19 @@ body {
 .bg-theme-primary,
 .bg-theme-secondary,
 .bg-theme-glass {
-  transition: background 1.5s ease-in-out !important;
+  transition: background 1s ease-out !important;
 }
 
 /* Smooth transition for text colors */
 .text-theme-primary,
 .text-theme-secondary,
 .text-theme-tertiary {
-  transition: color 1.5s ease-in-out !important;
+  transition: color 1s ease-out !important;
 }
 
 /* Smooth transition for borders */
 .border-theme-glass {
-  transition: border-color 1.5s ease-in-out !important;
+  transition: border-color 1s ease-out !important;
 }
 
 
