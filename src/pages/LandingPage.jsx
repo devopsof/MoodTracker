@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { motion, useAnimation, useInView } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import ThemeToggle from '../components/ThemeToggle'
 
 const FeatureCard = ({ icon, title, description, delay = 0 }) => {
   const controls = useAnimation()
@@ -159,7 +160,7 @@ function LandingPage() {
       />
 
       {/* Header */}
-      <header className="relative z-10 bg-theme-glass border-b border-theme-glass">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-theme-glass border-b border-theme-glass">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
             <div 
@@ -169,19 +170,22 @@ function LandingPage() {
               <span className="text-3xl">🌈</span>
               <h1 className="text-2xl sm:text-3xl font-bold text-theme-primary">MoodFlow</h1>
             </div>
-            <button 
-              onClick={handleGetStarted}
-              className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl bg-white text-purple-700 hover:bg-gray-100 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm sm:text-base mr-20 sm:mr-0"
-              aria-label="Get Started with MoodFlow"
-            >
-              Get Started
-            </button>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={handleGetStarted}
+                className="px-4 py-2 sm:px-6 sm:py-3 rounded-2xl bg-white text-purple-700 hover:bg-gray-100 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white/50 text-sm sm:text-base"
+                aria-label="Get Started with MoodFlow"
+              >
+                Get Started
+              </button>
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative z-10 pt-20 pb-32">
+      <section className="relative z-10 pt-52 pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 50 }}

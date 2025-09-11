@@ -5,10 +5,10 @@ import CalendarHeatmap from '../components/CalendarHeatmap'
 import Analytics from '../components/Analytics'
 import AITherapist from '../components/AITherapist'
 import Greeting from '../components/Greeting'
-import { loadEntries, addEntry } from '../utils/api'
+import { loadEntries, addEntry, deleteEntry, createEntry } from '../utils/api'
 import { processAndUploadPhotos, deletePhotoFromS3 } from '../utils/s3PhotoApi'
 import { storeMultiplePhotos } from '../utils/photoStorage'
-import { loadEntriesFromLocal, addEntryToLocal, updateEntryInLocal, mergeEntries, cleanupDuplicateEntries } from '../utils/localStorageApi'
+import { loadEntriesFromLocal, addEntryToLocal, updateEntryInLocal, deleteEntryFromLocal, mergeEntries, cleanupDuplicateEntries } from '../utils/localStorageApi'
 import { useAuth } from '../context/AuthContext'
 
 function DashboardPage({ user }) {
@@ -17,6 +17,19 @@ function DashboardPage({ user }) {
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('entries')
   const [showSuccess, setShowSuccess] = useState(false)
+  // Entry form states lifted from EntryForm to persist across tab switches
+  const [mood, setMood] = useState(3)
+  const [intensity, setIntensity] = useState(5)
+  const [note, setNote] = useState('')
+  const [selectedTags, setSelectedTags] = useState([])
+  const [customTag, setCustomTag] = useState('')
+  const [quickMoodMode, setQuickMoodMode] = useState(false)
+  const [showPromptSelector, setShowPromptSelector] = useState(false)
+  const [selectedPrompt, setSelectedPrompt] = useState(null)
+  const [photos, setPhotos] = useState([])
+  const [aiAnalysis, setAiAnalysis] = useState(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [showAiSuggestion, setShowAiSuggestion] = useState(false)
   // Load entries from both API and localStorage when component mounts or user changes
   useEffect(() => {
     const loadUserEntries = async () => {
@@ -32,13 +45,18 @@ function DashboardPage({ user }) {
             console.log('🧽 Cleaned up', duplicatesRemoved, 'duplicate entries')
           }
           
-          // TEMPORARY: Load from localStorage only to prevent duplicates
-          // TODO: Re-enable API sync once duplicate issue is resolved
+        try {
+          const apiEntries = await loadEntries(user.email)
           const localEntries = loadEntriesFromLocal(user.email)
-          console.log('📊 Loading from localStorage only:', localEntries.length, 'entries')
-          console.log('🚫 API sync temporarily disabled to prevent duplicates')
-          
+          const mergedEntries = mergeEntries(apiEntries, localEntries)
+          setEntries(mergedEntries)
+          console.log('📊 Loaded merged entries from API and localStorage:', mergedEntries.length, 'entries')
+        } catch (error) {
+          console.error('❌ Failed to load from API, falling back to localStorage:', error)
+          const localEntries = loadEntriesFromLocal(user.email)
           setEntries(localEntries)
+          console.log('📊 Loading from localStorage fallback:', localEntries.length, 'entries')
+        }
         } catch (error) {
           console.error('❌ Failed to load entries:', error)
           setEntries([])
@@ -63,7 +81,28 @@ function DashboardPage({ user }) {
     }
   }, [user?.email])
 
-  const handleEntryUpdate = async (updatedEntry) => {
+  const handleEntryUpdate = async (updatedEntry, deletedEntryId = null) => {
+    // Handle deletion case
+    if (deletedEntryId) {
+      try {
+        // Update the entries state by filtering out the deleted entry
+        setEntries(prevEntries => prevEntries.filter(entry => entry.id !== deletedEntryId))
+        
+        // Delete from localStorage
+        if (user && user.email) {
+          deleteEntryFromLocal(user.email, deletedEntryId)
+          console.log('🗑️ Entry deleted from state and localStorage:', deletedEntryId)
+        }
+        
+        return
+      } catch (error) {
+        console.error('Failed to delete entry:', error)
+        alert('Failed to delete entry. Please try again.')
+        return
+      }
+    }
+    
+    // Handle update case
     try {
       // Update the entry in the local state
       setEntries(prevEntries => 
@@ -153,12 +192,19 @@ function DashboardPage({ user }) {
         // TODO: Re-enable once duplicate issue is fully resolved
         console.log('🚫 API sync disabled to prevent duplicates - data is safe in localStorage')
         
-        // Update UI state directly instead of reloading
-        // This prevents the double entry issue by avoiding the merge process
+        // Update UI state directly
         const updatedEntries = [entry, ...entries]
         setEntries(updatedEntries)
         
         console.log('✅ Entry added to UI state, total entries:', updatedEntries.length)
+        
+        // Sync to API after local save
+        try {
+          await createEntry(entry, user.email)
+          console.log('✅ Entry synced to API successfully')
+        } catch (apiError) {
+          console.error('⚠️ Failed to sync entry to API (entry saved locally):', apiError)
+        }
       }
       
       setShowSuccess(true)
@@ -167,6 +213,19 @@ function DashboardPage({ user }) {
       console.error('❌ Failed to save entry:', error)
       alert('Failed to save entry. Please try again.')
     }
+
+    // Reset form states after successful save
+    setMood(3)
+    setIntensity(5)
+    setNote('')
+    setSelectedTags([])
+    setCustomTag('')
+    setQuickMoodMode(false)
+    setSelectedPrompt(null)
+    setPhotos([])
+    setAiAnalysis(null)
+    setIsAnalyzing(false)
+    setShowAiSuggestion(false)
   }
 
   return (
@@ -275,7 +334,33 @@ function DashboardPage({ user }) {
         <div style={{ minHeight: '600px' }} className="overflow-hidden px-2 sm:px-0">
           {activeTab === 'entries' && (
             <div className="flex flex-col lg:grid lg:grid-cols-2 gap-6 lg:gap-8">
-              <EntryForm onAddEntry={handleAddEntry} />
+              <EntryForm
+                onAddEntry={handleAddEntry}
+                mood={mood}
+                setMood={setMood}
+                intensity={intensity}
+                setIntensity={setIntensity}
+                note={note}
+                setNote={setNote}
+                selectedTags={selectedTags}
+                setSelectedTags={setSelectedTags}
+                customTag={customTag}
+                setCustomTag={setCustomTag}
+                quickMoodMode={quickMoodMode}
+                setQuickMoodMode={setQuickMoodMode}
+                showPromptSelector={showPromptSelector}
+                setShowPromptSelector={setShowPromptSelector}
+                selectedPrompt={selectedPrompt}
+                setSelectedPrompt={setSelectedPrompt}
+                photos={photos}
+                setPhotos={setPhotos}
+                aiAnalysis={aiAnalysis}
+                setAiAnalysis={setAiAnalysis}
+                isAnalyzing={isAnalyzing}
+                setIsAnalyzing={setIsAnalyzing}
+                showAiSuggestion={showAiSuggestion}
+                setShowAiSuggestion={setShowAiSuggestion}
+              />
               <EntryList entries={entries} isLoading={isLoading} onEntryUpdate={handleEntryUpdate} />
             </div>
           )}

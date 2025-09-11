@@ -77,6 +77,31 @@ export const updateEntryInLocal = (userEmail, updatedEntry) => {
 }
 
 /**
+ * Delete entry from localStorage
+ * @param {string} userEmail - User's email
+ * @param {string} entryId - ID of entry to delete
+ * @returns {boolean} True if entry was deleted
+ */
+export const deleteEntryFromLocal = (userEmail, entryId) => {
+  try {
+    const entries = loadEntriesFromLocal(userEmail)
+    const initialLength = entries.length
+    const filteredEntries = entries.filter(entry => entry.id !== entryId)
+    
+    if (filteredEntries.length < initialLength) {
+      saveEntriesToLocal(userEmail, filteredEntries)
+      console.log('🗑️ Entry deleted from localStorage:', entryId)
+      return true
+    }
+    
+    return false
+  } catch (error) {
+    console.error('Error deleting entry from localStorage:', error)
+    throw error
+  }
+}
+
+/**
  * Get all entries from localStorage
  * @returns {Object} All entries organized by user
  */

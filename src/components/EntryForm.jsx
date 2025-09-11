@@ -6,24 +6,34 @@ import PhotoUpload from './PhotoUpload'
 import { analyzeSentiment } from '../utils/api'
 import { useAuth } from '../context/AuthContext'
 
-function EntryForm({ onAddEntry }) {
+function EntryForm({
+  onAddEntry,
+  mood,
+  setMood,
+  intensity,
+  setIntensity,
+  note,
+  setNote,
+  selectedTags,
+  setSelectedTags,
+  customTag,
+  setCustomTag,
+  quickMoodMode,
+  setQuickMoodMode,
+  showPromptSelector,
+  setShowPromptSelector,
+  selectedPrompt,
+  setSelectedPrompt,
+  photos,
+  setPhotos,
+  aiAnalysis,
+  setAiAnalysis,
+  isAnalyzing,
+  setIsAnalyzing,
+  showAiSuggestion,
+  setShowAiSuggestion
+}) {
   const { user } = useAuth()
-  const [mood, setMood] = useState(3)
-  const [intensity, setIntensity] = useState(5)
-  const [note, setNote] = useState('')
-  const [selectedTags, setSelectedTags] = useState([])
-  const [customTag, setCustomTag] = useState('')
-  const [quickMoodMode, setQuickMoodMode] = useState(false)
-  const [showPromptSelector, setShowPromptSelector] = useState(false)
-  const [selectedPrompt, setSelectedPrompt] = useState(null)
-  
-  // Photo upload state
-  const [photos, setPhotos] = useState([])
-  
-  // AI Sentiment Analysis state
-  const [aiAnalysis, setAiAnalysis] = useState(null)
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [showAiSuggestion, setShowAiSuggestion] = useState(false)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -37,14 +47,7 @@ function EntryForm({ onAddEntry }) {
         photos: photos // Include photos in the entry data
       })
     }
-    setNote('')
-    setMood(3)
-    setIntensity(5)
-    setSelectedTags([])
-    setCustomTag('')
-    setQuickMoodMode(false)
-    setSelectedPrompt(null)
-    setPhotos([])
+    // Reset handled in parent component
   }
 
   const handleTagToggle = (tagName) => {
@@ -80,14 +83,7 @@ function EntryForm({ onAddEntry }) {
         promptId: null // Quick check-ins don't use prompts
       })
     }
-    // Reset form
-    setNote('')
-    setMood(3)
-    setIntensity(5)
-    setSelectedTags([])
-    setCustomTag('')
-    setQuickMoodMode(false)
-    setPhotos([])
+    // Reset handled in parent component after submit
   }
 
   const handlePromptSelect = (prompt) => {

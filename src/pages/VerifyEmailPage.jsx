@@ -17,11 +17,13 @@ function VerifyEmailPage() {
     error, 
     clearError,
     pendingVerificationEmail,
+    pendingVerificationUsername,
     isAuthenticated 
   } = useAuth()
 
-  // Use the stored email from sign-up flow
+  // Use the stored email and username from sign-up flow
   const email = pendingVerificationEmail
+  const username = pendingVerificationUsername
   
   const handleLogoClick = () => {
     if (isAuthenticated) {
@@ -31,15 +33,48 @@ function VerifyEmailPage() {
     }
   }
 
+  // Helper function to clean up localStorage before verification
+  const cleanupLocalStorage = () => {
+    try {
+      // Get all keys in localStorage that might be taking up space
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        // Remove any Cognito tokens that might be leftover from previous sessions
+        if (key && key.includes('CognitoIdentityServiceProvider') && 
+            !key.includes(username)) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      // Remove unnecessary items to free up space
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+          console.log('🧹 Cleaned up localStorage item:', key);
+        } catch (e) {
+          console.warn('Failed to remove item from localStorage:', key, e);
+        }
+      });
+      
+      console.log(`🧹 Cleaned up ${keysToRemove.length} localStorage items`);
+    } catch (e) {
+      console.warn('Failed to clean up localStorage:', e);
+    }
+  }
+
   const handleVerification = async (e) => {
     e.preventDefault()
     clearError()
 
-    if (!email || !code) {
+    if (!email || !username || !code) {
       return
     }
 
     try {
+      // Clean up localStorage before verification to avoid quota issues
+      cleanupLocalStorage();
+      
       const result = await confirmSignUp({ code })
       
       setVerificationSuccess(true)
@@ -49,11 +84,14 @@ function VerifyEmailPage() {
         console.log('✅ Auto-signed in after verification!')
         // Show success message briefly before redirect
         setTimeout(() => {
-          // User will be automatically redirected to dashboard by AuthContext
+          navigate('/dashboard')
         }, 1500)
       } else {
         console.log('ℹ️ Verification complete, please sign in')
-        // Fallback: user will be redirected to login page
+        // Fallback: redirect to login page
+        setTimeout(() => {
+          navigate('/login')
+        }, 1500)
       }
     } catch (error) {
       console.error('Verification error:', error)
@@ -62,7 +100,7 @@ function VerifyEmailPage() {
   }
 
   const handleResendCode = async () => {
-    if (!email) return
+    if (!email || !username) return
 
     setIsResending(true)
     setResendMessage('')
@@ -130,10 +168,12 @@ function VerifyEmailPage() {
         </div>
 
         <form onSubmit={handleVerification} className="space-y-6">
-          {/* Show the email being verified */}
+          {/* Show the email and username being verified */}
           <div className="text-center mb-6">
             <p className="text-white/70 text-sm mb-2">Verification code sent to:</p>
             <p className="text-white font-medium">{email}</p>
+            <p className="text-white/70 text-sm mt-2 mb-1">Username:</p>
+            <p className="text-white font-medium">{username}</p>
           </div>
 
           <div>
@@ -180,7 +220,7 @@ function VerifyEmailPage() {
 
           <button 
             type="submit" 
-            disabled={isLoading || !email || !code}
+            disabled={isLoading || !email || !username || !code}
             className="w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-white to-gray-100 text-purple-700 font-semibold hover:from-gray-100 hover:to-white transform hover:scale-[1.02] transition-all duration-300 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
           >
             {isLoading ? 'Verifying...' : 'Verify Email'}
@@ -194,7 +234,7 @@ function VerifyEmailPage() {
           <button 
             type="button"
             onClick={handleResendCode}
-            disabled={isResending || !email}
+            disabled={isResending || !email || !username}
             className="text-white hover:text-white/80 transition-colors duration-300 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isResending ? 'Sending...' : 'Resend Code'}

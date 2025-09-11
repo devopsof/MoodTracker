@@ -150,6 +150,41 @@ export const clearEntries = (userEmail) => {
   console.log('🗑️ clearEntries called (API mode - not implemented)')
 }
 
+/**
+ * Delete a mood entry
+ * @param {string} entryId - ID of the entry to delete
+ * @param {string} userEmail - User's email for identification
+ * @returns {Promise<Object>} Response with deletion status
+ */
+export const deleteEntry = async (entryId, userEmail) => {
+  console.log('🗑️ deleteEntry called:', { entryId, userEmail })
+  
+  try {
+    const response = await fetch(`${API_BASE_URL}/entries/${entryId}?userEmail=${encodeURIComponent(userEmail)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        // TODO: Add Authorization header with JWT token when Cognito is set up
+        // 'Authorization': `Bearer ${getAuthToken()}`
+      }
+    })
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('❌ API Error Response:', errorText)
+      throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`)
+    }
+
+    const data = await response.json()
+    console.log('✅ Entry deleted successfully:', data)
+    
+    return data
+  } catch (error) {
+    console.error('❌ Failed to delete entry:', error)
+    throw new Error(`Failed to delete entry: ${error.message}`)
+  }
+}
+
 export const getStorageInfo = () => {
   return { totalSize: 0, itemCount: 0, totalSizeKB: 0 }
 }

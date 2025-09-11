@@ -21,6 +21,22 @@ const initialState = {
   pendingVerificationUsername: null, // Store username for auto-login after verification
 }
 
+// Try to restore pending verification data from localStorage
+try {
+  const pendingVerification = localStorage.getItem('pendingVerification');
+  if (pendingVerification) {
+    const { email, username, password } = JSON.parse(pendingVerification);
+    if (email && username) {
+      initialState.pendingVerificationEmail = email;
+      initialState.pendingVerificationUsername = username;
+      initialState.pendingVerificationPassword = password;
+      initialState.authStatus = 'needsConfirmation';
+    }
+  }
+} catch (e) {
+  console.warn('Failed to restore pending verification from localStorage:', e);
+}
+
 // Action types
 const actions = {
   SET_LOADING: 'SET_LOADING',
@@ -142,16 +158,22 @@ export function AuthProvider({ children }) {
       dispatch({ type: actions.SET_PENDING_USERNAME, payload: username })
       dispatch({ type: actions.SET_AUTH_STATUS, payload: 'needsConfirmation' })
       
-      // Trigger navigation to verification page
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.location.href = '/verify'
-        }
-      }, 100)
+      // Also store in localStorage to persist across page refreshes
+      try {
+        localStorage.setItem('pendingVerification', JSON.stringify({
+          email: email,
+          username: username,
+          password: password,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        console.warn('Failed to store pending verification in localStorage:', e);
+      }
       
       return {
         success: true,
         message: 'Sign up successful! Please check your email.',
+        needsVerification: true
       }
     } catch (error) {
       dispatch({
@@ -165,11 +187,45 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Helper function to clean up localStorage before verification
+  const cleanupLocalStorage = () => {
+    try {
+      // Get all keys in localStorage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        // Keep only essential keys, remove others
+        if (key && !key.startsWith('pendingVerification') && 
+            !key.startsWith('moodtracker_form_mode') && 
+            !key.startsWith('moodtracker_entries')) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      // Remove unnecessary items to free up space
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+          console.log('🧹 Cleaned up localStorage item:', key);
+        } catch (e) {
+          console.warn('Failed to remove item from localStorage:', key, e);
+        }
+      });
+      
+      console.log(`🧹 Cleaned up ${keysToRemove.length} localStorage items`);
+    } catch (e) {
+      console.warn('Failed to clean up localStorage:', e);
+    }
+  }
+  
   const confirmSignUp = async ({ code }) => {
     dispatch({ type: actions.SET_LOADING, payload: true })
     dispatch({ type: actions.CLEAR_ERROR })
     
     try {
+      // Clean up localStorage before verification to avoid quota issues
+      cleanupLocalStorage();
+      
       await cognitoConfirmSignUp({ username: state.pendingVerificationUsername, code })
       
       // Auto-login after successful verification using stored credentials
@@ -185,6 +241,13 @@ export function AuthProvider({ children }) {
         // Clear stored credentials for security
         dispatch({ type: actions.CLEAR_PENDING_CREDENTIALS })
         
+        // Clear localStorage as well
+        try {
+          localStorage.removeItem('pendingVerification');
+        } catch (e) {
+          console.warn('Failed to remove pending verification from localStorage:', e);
+        }
+        
         // Set user as authenticated
         dispatch({
           type: actions.SET_USER,
@@ -194,12 +257,6 @@ export function AuthProvider({ children }) {
           },
         })
         
-        // Navigate to dashboard after successful auto-login
-        setTimeout(() => {
-          if (typeof window !== 'undefined') {
-            window.location.href = '/dashboard'
-          }
-        }, 100)
         
         return {
           success: true,
@@ -209,6 +266,14 @@ export function AuthProvider({ children }) {
       } else {
         // Fallback if password not stored (shouldn't happen)
         dispatch({ type: actions.SET_AUTH_STATUS, payload: 'signedOut' })
+        
+        // Clear localStorage as well
+        try {
+          localStorage.removeItem('pendingVerification');
+        } catch (e) {
+          console.warn('Failed to remove pending verification from localStorage:', e);
+        }
+        
         return {
           success: true,
           message: 'Email verified! Please sign in.',
@@ -266,6 +331,14 @@ export function AuthProvider({ children }) {
       dispatch({ type: actions.CLEAR_USER })
       // Clear any pending credentials for security
       dispatch({ type: actions.CLEAR_PENDING_CREDENTIALS })
+      
+      // Clear localStorage as well
+      try {
+        localStorage.removeItem('pendingVerification');
+        localStorage.removeItem('moodtracker_form_mode');
+      } catch (e) {
+        console.warn('Failed to clear localStorage items:', e);
+      }
     }
   }
 

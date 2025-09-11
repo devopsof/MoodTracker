@@ -103,6 +103,37 @@ export const confirmSignUp = ({ username, code }) => {
  * @param {string} password - User's password
  * @returns {Promise<Object>} Promise resolving to session data
  */
+// Helper function to clean up localStorage before storing new tokens
+const cleanupStorageBeforeSignIn = (username) => {
+  try {
+    // Get all keys in localStorage
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      // Remove any Cognito tokens that might be leftover from previous sessions
+      // but keep the current user's tokens
+      if (key && key.includes('CognitoIdentityServiceProvider') && 
+          !key.includes(username)) {
+        keysToRemove.push(key);
+      }
+    }
+    
+    // Remove unnecessary items to free up space
+    keysToRemove.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+        console.log('🧹 Cleaned up localStorage item:', key);
+      } catch (e) {
+        console.warn('Failed to remove item from localStorage:', key, e);
+      }
+    });
+    
+    console.log(`🧹 Cleaned up ${keysToRemove.length} localStorage items`);
+  } catch (e) {
+    console.warn('Failed to clean up localStorage:', e);
+  }
+}
+
 export const signIn = ({ email, password }) => {
   return new Promise((resolve, reject) => {
     const authenticationDetails = new AuthenticationDetails({
@@ -114,6 +145,9 @@ export const signIn = ({ email, password }) => {
       Username: email, // This can be username or email
       Pool: userPool,
     })
+    
+    // Clean up localStorage before authentication to avoid quota issues
+    cleanupStorageBeforeSignIn(email);
 
     cognitoUser.authenticateUser(authenticationDetails, {
       onSuccess: (session) => {
