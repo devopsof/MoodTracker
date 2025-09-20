@@ -105,9 +105,10 @@ cd deployment
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open Pull Request
 
-## 📄 License
+## 📄 Links
 
-MIT License - see LICENSE file for details.
+1. Youtube Demo - https://youtu.be/B_iFj0kwgsA
+2. Blog - https://moodflow.hashnode.dev/
 
 ---
 
