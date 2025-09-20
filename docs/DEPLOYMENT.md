@@ -1,77 +1,159 @@
-# MoodTracker Deployment Guide
+# 🚀 MoodTracker Deployment Guide
 
-This document explains how to deploy your MoodTracker frontend to AWS S3.
+This comprehensive guide will help you deploy your MoodTracker application to AWS S3 with CloudFront for a production-ready setup.
 
-## Prerequisites
+## 📋 Prerequisites
 
-1. **AWS CLI installed and configured**
-   ```bash
-   aws configure
-   ```
-   Enter your AWS Access Key ID, Secret Access Key, region (us-east-1), and output format (json).
+### Required Software
+1. **Node.js** (v16 or higher) - [Download here](https://nodejs.org/)
+2. **AWS CLI** (v2 recommended) - [Installation guide](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+3. **Git** - [Download here](https://git-scm.com/downloads)
 
-2. **Node.js dependencies installed**
-   ```bash
-   npm install
-   ```
+### AWS Account Setup
+1. **AWS Account** - Create one at [aws.amazon.com](https://aws.amazon.com)
+2. **IAM User** with the following permissions:
+   - `s3:CreateBucket`
+   - `s3:DeleteBucket`
+   - `s3:GetBucketLocation`
+   - `s3:ListBucket`
+   - `s3:GetObject`
+   - `s3:PutObject`
+   - `s3:DeleteObject`
+   - `s3:PutBucketWebsite`
+   - `s3:PutBucketPolicy`
+   - `s3:DeletePublicAccessBlock`
+   - `cloudfront:*` (if using CloudFront)
 
-## Quick Deployment
+### Configure AWS CLI
+```bash
+aws configure
+```
+Enter your:
+- AWS Access Key ID
+- AWS Secret Access Key  
+- Default region: `us-east-1`
+- Output format: `json`
 
-### Option 1: Using the PowerShell Script (Recommended)
+### Verify AWS Setup
+```bash
+aws sts get-caller-identity
+```
+
+## 🎯 Quick Start
+
+### Step 1: Clone and Setup
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/moodtracker.git
+cd moodtracker
+
+# Install dependencies
+npm install
+
+# Copy environment template
+cp .env.example .env.local
+```
+
+### Step 2: Configure Environment
+Edit `.env.local` with your AWS settings:
+```bash
+VITE_AWS_REGION=us-east-1
+VITE_COGNITO_USER_POOL_ID=us-east-1_XXXXXXXXX
+VITE_COGNITO_CLIENT_ID=XXXXXXXXXXXXXXXXXXXXXXXXXX
+VITE_API_GATEWAY_URL=https://api.yourdomain.com
+VITE_API_BASE_URL=https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com/prod
+```
+
+### Step 3: Build and Deploy
+
+#### Option A: Using PowerShell Script (Recommended for Windows)
+```powershell
+# Build the application
+npm run build
+
+# Deploy to S3 (replace with your unique bucket name)
+.\deployment\deploy-to-s3.ps1 -BucketName "moodtracker-app-yourname"
+```
+
+#### Option B: Using Bash Script (Recommended for Mac/Linux)
+```bash
+# Build the application
+npm run build
+
+# Deploy to S3 (replace with your unique bucket name)
+./aws/setup-s3.sh moodtracker-app-yourname
+```
+
+#### Option C: Manual AWS CLI Commands
+**Step-by-step manual deployment for full control:**
 
 1. **Build the application:**
    ```bash
    npm run build
    ```
 
-2. **Run the deployment script:**
-   ```powershell
-   .\deploy-to-s3.ps1 -BucketName "your-unique-bucket-name"
-   ```
-
-   Example:
-   ```powershell
-   .\deploy-to-s3.ps1 -BucketName "moodtracker-app-prod"
-   ```
-
-### Option 2: Manual AWS CLI Commands
-
-1. **Build the application:**
+2. **Create S3 bucket (choose a unique name):**
    ```bash
-   npm run build
+   aws s3 mb s3://moodtracker-app-yourname
    ```
 
-2. **Create S3 bucket:**
+3. **Remove public access block:**
    ```bash
-   aws s3 mb s3://your-bucket-name
+   aws s3api delete-public-access-block --bucket moodtracker-app-yourname
    ```
 
-3. **Configure static website hosting:**
+4. **Configure static website hosting:**
    ```bash
-   aws s3api put-bucket-website --bucket your-bucket-name --website-configuration '{
+   aws s3api put-bucket-website --bucket moodtracker-app-yourname --website-configuration '{
      "IndexDocument": {"Suffix": "index.html"},
      "ErrorDocument": {"Key": "index.html"}
    }'
    ```
 
-4. **Set public read policy:**
+5. **Set public read policy:**
    ```bash
-   aws s3api put-bucket-policy --bucket your-bucket-name --policy '{
+   aws s3api put-bucket-policy --bucket moodtracker-app-yourname --policy '{
      "Version": "2012-10-17",
      "Statement": [{
        "Sid": "PublicReadGetObject",
        "Effect": "Allow",
        "Principal": "*",
        "Action": "s3:GetObject",
-       "Resource": "arn:aws:s3:::your-bucket-name/*"
+       "Resource": "arn:aws:s3:::moodtracker-app-yourname/*"
      }]
    }'
    ```
 
-5. **Upload files:**
+6. **Upload files with proper caching:**
    ```bash
-   aws s3 sync dist/ s3://your-bucket-name --delete
+   # Upload assets with long-term caching
+   aws s3 sync dist/ s3://moodtracker-app-yourname --delete --cache-control "public, max-age=31536000" --exclude "index.html"
+   
+   # Upload index.html with no caching (for SPA updates)
+   aws s3 cp dist/index.html s3://moodtracker-app-yourname/index.html --cache-control "no-cache, no-store, must-revalidate" --content-type "text/html"
    ```
+
+7. **Your app is now live at:**
+   ```
+   http://moodtracker-app-yourname.s3-website-us-east-1.amazonaws.com
+   ```
+
+## 🌍 Production Setup with CloudFront
+
+For production, set up CloudFront CDN for better performance and HTTPS:
+
+### Create CloudFront Distribution
+```bash
+# Create CloudFront distribution (replace bucket name)
+aws cloudfront create-distribution --distribution-config file://deployment/cloudfront-config.json
+```
+
+### Benefits of CloudFront:
+- ✅ Global CDN for faster loading
+- ✅ Free SSL/TLS certificate
+- ✅ Custom domain support
+- ✅ Better caching control
+- ✅ DDoS protection
 
 ## Environment Variables
 

@@ -15,16 +15,48 @@ A beautiful, modern mood tracking application with animated themes, powerful ana
 
 ## 🚀 Quick Start
 
+### For Development
 ```bash
-# Install dependencies
+# Clone the repository
+git clone https://github.com/yourusername/moodtracker.git
+cd moodtracker
+
+# Quick setup (recommended)
+./setup.ps1          # Windows PowerShell
+# OR
+./setup.sh           # Mac/Linux
+
+# Manual setup
 npm install
+cp .env.example .env.local
+# Edit .env.local with your AWS configuration
 
 # Start development server
 npm run dev
+```
 
+### For Production Deployment 🌐
+
+#### Option 1: Automated Deployment (GitHub Actions)
+```bash
+# 1. Fork/clone this repository
+# 2. Configure GitHub secrets and variables (see docs/GITHUB_ACTIONS.md)
+# 3. Push to main branch - automatic deployment!
+git push origin main
+```
+
+#### Option 2: Manual Deployment
+```bash
 # Build for production
 npm run build
+
+# Deploy to AWS S3
+.\deployment\deploy-to-s3.ps1 -BucketName "your-unique-bucket-name"  # Windows
+# OR
+./aws/setup-s3.sh your-unique-bucket-name                            # Mac/Linux
 ```
+
+**📖 Full deployment guide:** [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ## 📁 Project Structure
 
@@ -87,14 +119,27 @@ cp .env.example .env.local
 - `npm run preview` - Preview build
 - `npm run lint` - Code linting
 
-## 🚀 Deployment
+## 🚀 Deployment Options
 
-See [Deployment Guide](docs/DEPLOYMENT.md) for AWS setup.
+### 🚀 Quick Deploy
+1. **Automated CI/CD** - Push to main branch for auto-deployment via GitHub Actions
+2. **One-Click Script** - Use our deployment scripts for instant setup
+3. **Manual AWS CLI** - Full control with step-by-step commands
 
-```bash
-npm run build
-cd deployment
-./deploy-to-s3-clean.ps1
+### 📚 Documentation
+- **[Complete Deployment Guide](docs/DEPLOYMENT.md)** - Step-by-step deployment instructions
+- **[GitHub Actions Setup](docs/GITHUB_ACTIONS.md)** - Automated CI/CD configuration
+- **[Environment Setup](setup.ps1)** - Quick environment configuration
+
+### 🌐 Live Demo
+After deployment, your app will be available at:
+```
+http://your-bucket-name.s3-website-us-east-1.amazonaws.com
+```
+
+With CloudFront (recommended for production):
+```
+https://your-cloudfront-domain.cloudfront.net
 ```
 
 ## 🤝 Contributing

@@ -1,0 +1,205 @@
+name: Deploy MoodTracker to AWS S3
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  # Build and test job
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+
+    - name: 📦 Install dependencies
+      run: npm ci
+
+    - name: 🧪 Run tests (if available)
+      run: |
+        if [ -f "package.json" ] && grep -q '"test"' package.json; then
+          npm test
+        else
+          echo "No tests found, skipping..."
+        fi
+      continue-on-error: true
+
+    - name: 🔍 Lint code (if available)
+      run: |
+        if [ -f "package.json" ] && grep -q '"lint"' package.json; then
+          npm run lint
+        else
+          echo "No linting configured, skipping..."
+        fi
+      continue-on-error: true
+
+    - name: 🔨 Build application
+      run: npm run build
+      env:
+        VITE_AWS_REGION: ${{ vars.VITE_AWS_REGION || 'us-east-1' }}
+        VITE_COGNITO_USER_POOL_ID: ${{ vars.VITE_COGNITO_USER_POOL_ID }}
+        VITE_COGNITO_CLIENT_ID: ${{ vars.VITE_COGNITO_CLIENT_ID }}
+        VITE_API_GATEWAY_URL: ${{ vars.VITE_API_GATEWAY_URL }}
+        VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        VITE_COGNITO_IDENTITY_POOL_ID: ${{ vars.VITE_COGNITO_IDENTITY_POOL_ID }}
+
+    - name: 📁 Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: dist-files
+        path: dist/
+        retention-days: 1
+
+  # Deploy job (only runs on main/master branch)
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.website-url }}
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+
+    - name: 📁 Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: dist-files
+        path: dist/
+
+    - name: ⚙️ Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ vars.VITE_AWS_REGION || 'us-east-1' }}
+
+    - name: 🔍 Verify AWS credentials
+      run: aws sts get-caller-identity
+
+    - name: 📦 Create S3 bucket if not exists
+      id: create-bucket
+      run: |
+        BUCKET_NAME="${{ vars.S3_BUCKET_NAME }}"
+        if [ -z "$BUCKET_NAME" ]; then
+          echo "❌ S3_BUCKET_NAME variable is not set!"
+          exit 1
+        fi
+        
+        echo "bucket-name=$BUCKET_NAME" >> $GITHUB_OUTPUT
+        
+        if aws s3api head-bucket --bucket "$BUCKET_NAME" 2>/dev/null; then
+          echo "✅ Bucket $BUCKET_NAME already exists"
+        else
+          echo "📦 Creating bucket $BUCKET_NAME..."
+          aws s3 mb "s3://$BUCKET_NAME"
+          echo "✅ Bucket $BUCKET_NAME created"
+        fi
+
+    - name: 🌐 Configure S3 bucket for static website hosting
+      run: |
+        BUCKET_NAME="${{ steps.create-bucket.outputs.bucket-name }}"
+        
+        # Remove public access block
+        aws s3api delete-public-access-block --bucket "$BUCKET_NAME" || true
+        
+        # Configure website hosting
+        aws s3api put-bucket-website \
+          --bucket "$BUCKET_NAME" \
+          --website-configuration '{
+            "IndexDocument": {"Suffix": "index.html"},
+            "ErrorDocument": {"Key": "index.html"}
+          }'
+        
+        # Set public read policy
+        aws s3api put-bucket-policy \
+          --bucket "$BUCKET_NAME" \
+          --policy '{
+            "Version": "2012-10-17",
+            "Statement": [{
+              "Sid": "PublicReadGetObject",
+              "Effect": "Allow",
+              "Principal": "*",
+              "Action": "s3:GetObject",
+              "Resource": "arn:aws:s3:::'"$BUCKET_NAME"'/*"
+            }]
+          }'
+
+    - name: 🚀 Deploy to S3
+      id: deploy
+      run: |
+        BUCKET_NAME="${{ steps.create-bucket.outputs.bucket-name }}"
+        
+        # Upload assets with long-term caching (exclude index.html)
+        aws s3 sync dist/ "s3://$BUCKET_NAME" \
+          --delete \
+          --cache-control "public, max-age=31536000" \
+          --exclude "index.html"
+        
+        # Upload index.html with no caching (for SPA updates)
+        aws s3 cp dist/index.html "s3://$BUCKET_NAME/index.html" \
+          --cache-control "no-cache, no-store, must-revalidate" \
+          --content-type "text/html"
+        
+        WEBSITE_URL="http://$BUCKET_NAME.s3-website-${{ vars.VITE_AWS_REGION || 'us-east-1' }}.amazonaws.com"
+        echo "website-url=$WEBSITE_URL" >> $GITHUB_OUTPUT
+        echo "✅ Deployment successful!"
+        echo "🌐 Website URL: $WEBSITE_URL"
+
+    - name: 📝 Create deployment summary
+      run: |
+        echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- ✅ **Status**: Successful" >> $GITHUB_STEP_SUMMARY
+        echo "- 📦 **S3 Bucket**: \`${{ steps.create-bucket.outputs.bucket-name }}\`" >> $GITHUB_STEP_SUMMARY
+        echo "- 🌐 **Website URL**: [${{ steps.deploy.outputs.website-url }}](${{ steps.deploy.outputs.website-url }})" >> $GITHUB_STEP_SUMMARY
+        echo "- 🕒 **Deployed at**: $(date -u)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### 🎯 Next Steps" >> $GITHUB_STEP_SUMMARY
+        echo "1. Test your application at the website URL above" >> $GITHUB_STEP_SUMMARY
+        echo "2. Consider setting up CloudFront for better performance" >> $GITHUB_STEP_SUMMARY
+        echo "3. Configure a custom domain if needed" >> $GITHUB_STEP_SUMMARY
+
+    - name: 🔄 Invalidate CloudFront (if configured)
+      if: vars.CLOUDFRONT_DISTRIBUTION_ID != ''
+      run: |
+        echo "🔄 Invalidating CloudFront distribution..."
+        aws cloudfront create-invalidation \
+          --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} \
+          --paths "/*"
+        echo "✅ CloudFront invalidation created"
+
+  # Cleanup job
+  cleanup:
+    needs: [build, deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+    - name: 🧹 Clean up artifacts
+      uses: actions/upload-artifact/merge@v4
+      with:
+        name: cleanup
+        pattern: dist-files
+        delete-merged: true
+      continue-on-error: true
